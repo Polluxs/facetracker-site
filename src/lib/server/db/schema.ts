@@ -12,6 +12,7 @@ export const user = pgTable('user', {
 	id: bigserial('id', { mode: 'number' }).primaryKey(),
 	email: text('email').notNull().unique(),
 	emailVerified: boolean('email_verified').default(false),
+	name: text('name'), // Required by better-auth, nullable
 	// TODO: Make these non-nullable once registration flow is updated
 	// For now nullable to test infrastructure
 	firstName: text('first_name'),

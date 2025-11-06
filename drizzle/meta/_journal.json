@@ -8,6 +8,13 @@
       "when": 1762418999487,
       "tag": "0000_silly_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762424657286,
+      "tag": "0001_complex_psynapse",
+      "breakpoints": true
     }
   ]
 }
