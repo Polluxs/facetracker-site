@@ -1,13 +1,13 @@
 services:
   db:
-    image: postgres
+    image: pgvector/pgvector:pg16
     restart: always
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: local
+      POSTGRES_DB: facetracker
     volumes:
       - pgdata:/var/lib/postgresql
 volumes:
