@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { dev } from '$app/environment';
+	import { PUBLIC_ENVIRONMENT } from '$env/static/public';
 
 	let currentStep = 1;
 	let isLoading = false;
@@ -118,11 +118,11 @@
 			console.error(err);
 
 			if (err instanceof TypeError && err.message.includes('fetch')) {
-				error = dev
+				error = PUBLIC_ENVIRONMENT === 'development'
 					? 'Cannot connect to authentication service. Please ensure the database is running with: pnpm run db:start'
 					: 'Authentication service temporarily unavailable';
 			} else if (err instanceof Error && err.message.includes('DATABASE_CONNECTION_ERROR')) {
-				error = dev
+				error = PUBLIC_ENVIRONMENT === 'development'
 					? 'Database connection failed. Please ensure the database is running with: pnpm run db:start'
 					: 'Authentication service temporarily unavailable';
 			} else {
@@ -578,7 +578,7 @@
 					</div>
 				{/if}
 
-				{#if dev && !success}
+				{#if PUBLIC_ENVIRONMENT === 'development' && !success}
 					<div class="mt-6 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 p-6 text-sm animate-fade-in delay-200">
 						<h4 class="font-semibold text-blue-900 mb-3">🧪 Development Mode</h4>
 						<p class="text-blue-700 mb-3">

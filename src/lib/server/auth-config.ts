@@ -5,13 +5,12 @@ import { db } from './db';
 import * as schema from './db/schema';
 import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
-import { dev } from '$app/environment';
 import { storeMagicLink } from './dev-magic-links';
 
 const resend = new Resend(env.RESEND_API_KEY);
 
 // Environment detection
-const environment = env.ENVIRONMENT || (dev ? 'development' : 'production');
+const environment = env.ENVIRONMENT || 'production';
 const isProduction = environment === 'production';
 
 // Email configuration per environment
@@ -71,7 +70,7 @@ export const auth = betterAuth({
 			expiresIn: 10 * 60,
 			sendMagicLink: async ({ email, url }) => {
 				// Store magic link in development mode for UI display
-				if (dev || environment === 'development') {
+				if (environment === 'development') {
 					storeMagicLink(email, url);
 				}
 

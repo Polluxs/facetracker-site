@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { dev } from '$app/environment';
+	import { PUBLIC_ENVIRONMENT } from '$env/static/public';
 	import { onMount } from 'svelte';
 
 	let isLoading = false;
@@ -14,7 +14,7 @@
 	let devMagicLinkEmail: string | null = null;
 
 	async function fetchDevMagicLink() {
-		if (!dev) return;
+		if (PUBLIC_ENVIRONMENT !== 'development') return;
 
 		try {
 			const response = await fetch('/api/dev/magic-link');
@@ -49,7 +49,7 @@
 				success = `📧 Check your email! We've sent a magic link to ${email}. Click the link to sign in instantly.`;
 
 				// Fetch the magic link in development mode
-				if (dev) {
+				if (PUBLIC_ENVIRONMENT === 'development') {
 					setTimeout(fetchDevMagicLink, 500);
 				}
 			}
@@ -58,11 +58,11 @@
 
 			// Check if it's a fetch error (like ERR_EMPTY_RESPONSE)
 			if (err instanceof TypeError && err.message.includes('fetch')) {
-				error = dev
+				error = PUBLIC_ENVIRONMENT === 'development'
 					? 'Cannot connect to authentication service. Please ensure the database is running with: pnpm run db:start'
 					: 'Authentication service temporarily unavailable';
 			} else if (err instanceof Error && err.message.includes('DATABASE_CONNECTION_ERROR')) {
-				error = dev
+				error = PUBLIC_ENVIRONMENT === 'development'
 					? 'Database connection failed. Please ensure the database is running with: pnpm run db:start'
 					: 'Authentication service temporarily unavailable';
 			} else {
@@ -74,7 +74,7 @@
 	}
 
 	onMount(() => {
-		if (dev) {
+		if (PUBLIC_ENVIRONMENT === 'development') {
 			fetchDevMagicLink();
 		}
 	});
@@ -251,7 +251,7 @@
 					</div>
 				</div>
 
-				{#if dev}
+				{#if PUBLIC_ENVIRONMENT === 'development'}
 					<div class="mt-6 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100/50 p-6 text-sm animate-fade-in delay-200">
 						<h4 class="font-semibold text-blue-900 mb-3">🧪 Test Environment</h4>
 						<p class="text-blue-700 mb-3">
