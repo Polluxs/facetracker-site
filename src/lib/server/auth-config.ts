@@ -8,7 +8,7 @@ import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { storeMagicLink } from './dev-magic-links';
 
-const resend = new Resend(env.RESEND_API_KEY);
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 // Environment detection
 const environment = env.ENVIRONMENT || (dev ? 'development' : 'production');
@@ -75,7 +75,7 @@ export const auth = betterAuth({
 					storeMagicLink(email, url);
 				}
 
-				if (!env.RESEND_API_KEY) {
+				if (!resend) {
 					console.warn(`⚠️ [${environment}] RESEND_API_KEY not configured - magic link sending disabled`);
 					console.warn('📧 Magic link URL for manual testing:', url);
 					return;

@@ -1,698 +1,565 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { authClient } from '$lib/auth-client';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	type Source = 'you' | 'found';
+	type ViewMode = 'grid' | 'list';
 
-	type ViewMode = 'list' | 'images' | 'tagged';
-	type ResultStatus = 'new' | 'pending' | 'removed';
-
-	interface Result {
-		id: string;
+	interface Page {
+		id: number;
+		title: string;
 		site: string;
 		url: string;
-		foundDate: string;
-		status: ResultStatus;
-		imageType: string;
-		websiteCategory: string;
-		imageId: string;
+		imageUrl?: string;
+		date: string;
+		source: Source;
 		tags: string[];
+		hasScreenshot: boolean;
 	}
 
-	interface Tag {
-		id: string;
-		name: string;
-		color: string;
-		isCustom: boolean;
-	}
+	let viewMode = $state<ViewMode>('grid');
+	let sourceFilter = $state<Source | 'all'>('all');
+	let selectedPage = $state<Page | null>(null);
 
-	let activeView = $state<ViewMode>('list');
-	let isTransitioning = $state(false);
-	let isDropdownOpen = $state(false);
-	let dropdownButton: HTMLButtonElement | null = $state(null);
-	let selectedFilter = $state<'all' | ResultStatus>('all');
-	let isAddingTag = $state(false);
-	let newTagName = $state('');
-	let newTagColor = $state('#3b82f6');
-	let selectedResultForTag: string | null = $state(null);
-
-	function switchView(viewMode: ViewMode) {
-		if (viewMode === activeView) return;
-
-		isTransitioning = true;
-		setTimeout(() => {
-			activeView = viewMode;
-			setTimeout(() => {
-				isTransitioning = false;
-			}, 50);
-		}, 150);
-	}
-
-	const predefinedTags: Tag[] = [
-		{ id: 'important', name: 'Important', color: '#ef4444', isCustom: false },
-		{ id: 'review', name: 'Review Later', color: '#f59e0b', isCustom: false },
-		{ id: 'ignore', name: 'Ignore', color: '#6b7280', isCustom: false },
-		{ id: 'personal', name: 'Personal', color: '#8b5cf6', isCustom: false },
-		{ id: 'professional', name: 'Professional', color: '#3b82f6', isCustom: false }
-	];
-
-	let customTags = $state<Tag[]>([]);
-	let allTags = $derived([...predefinedTags, ...customTags]);
-
-	const mockResults: Result[] = [
-		{ id: '1', site: 'example-blog.com', url: 'https://example-blog.com/post/123', foundDate: '2 hours ago', status: 'new', imageType: 'Profile Photo', websiteCategory: 'Blog', imageId: 'img1', tags: [] },
-		{ id: '2', site: 'photo-sharing.net', url: 'https://photo-sharing.net/gallery/456', foundDate: '5 hours ago', status: 'pending', imageType: 'Social Media Post', websiteCategory: 'Social Network', imageId: 'img2', tags: [] },
-		{ id: '3', site: 'news-site.org', url: 'https://news-site.org/article/789', foundDate: '1 day ago', status: 'removed', imageType: 'Event Photography', websiteCategory: 'News', imageId: 'img1', tags: [] },
-		{ id: '4', site: 'forum-discussion.com', url: 'https://forum-discussion.com/thread/321', foundDate: '2 days ago', status: 'new', imageType: 'Profile Photo', websiteCategory: 'Forum', imageId: 'img3', tags: [] },
-		{ id: '5', site: 'business-directory.co', url: 'https://business-directory.co/profile/654', foundDate: '3 days ago', status: 'pending', imageType: 'Professional Headshot', websiteCategory: 'Professional', imageId: 'img1', tags: [] },
-		{ id: '6', site: 'community-site.io', url: 'https://community-site.io/user/987', foundDate: '4 days ago', status: 'new', imageType: 'Social Media Post', websiteCategory: 'Community', imageId: 'img4', tags: [] },
-		{ id: '7', site: 'tech-blog.dev', url: 'https://tech-blog.dev/author/111', foundDate: '5 days ago', status: 'removed', imageType: 'Profile Photo', websiteCategory: 'Blog', imageId: 'img2', tags: [] },
-		{ id: '8', site: 'portfolio-site.com', url: 'https://portfolio-site.com/team/222', foundDate: '1 week ago', status: 'pending', imageType: 'Professional Headshot', websiteCategory: 'Professional', imageId: 'img5', tags: [] },
-		{ id: '9', site: 'social-network.app', url: 'https://social-network.app/posts/333', foundDate: '1 week ago', status: 'new', imageType: 'Event Photography', websiteCategory: 'Social Network', imageId: 'img3', tags: [] },
-		{ id: '10', site: 'magazine-online.com', url: 'https://magazine-online.com/feature/444', foundDate: '2 weeks ago', status: 'removed', imageType: 'Event Photography', websiteCategory: 'News', imageId: 'img4', tags: [] },
-		{ id: '11', site: 'startup-hub.io', url: 'https://startup-hub.io/founders/555', foundDate: '2 weeks ago', status: 'new', imageType: 'Professional Headshot', websiteCategory: 'Professional', imageId: 'img5', tags: [] },
-		{ id: '12', site: 'creative-commons.org', url: 'https://creative-commons.org/photos/666', foundDate: '3 weeks ago', status: 'pending', imageType: 'Social Media Post', websiteCategory: 'Community', imageId: 'img6', tags: [] }
-	];
-
-	let results = $state(mockResults);
-
-	interface GroupedImage {
-		imageId: string;
-		count: number;
-		results: Result[];
-		firstResult: Result;
-	}
-
-	function getFilteredResults(): Result[] {
-		if (selectedFilter === 'all') return results;
-		return results.filter(r => r.status === selectedFilter);
-	}
-
-	function getGroupedImages(): GroupedImage[] {
-		const filtered = getFilteredResults();
-		const groups = new Map<string, Result[]>();
-
-		filtered.forEach(result => {
-			const existing = groups.get(result.imageId) ?? [];
-			existing.push(result);
-			groups.set(result.imageId, existing);
-		});
-
-		return Array.from(groups.entries()).map(([imageId, results]) => ({
-			imageId,
-			count: results.length,
-			results,
-			firstResult: results[0]
-		}));
-	}
-
-	function getResultsByTag(): Map<string, Result[]> {
-		const tagMap = new Map<string, Result[]>();
-
-		// Group results by each tag they have
-		results.forEach(result => {
-			if (result.tags.length === 0) {
-				const untagged = tagMap.get('untagged') ?? [];
-				untagged.push(result);
-				tagMap.set('untagged', untagged);
-			} else {
-				result.tags.forEach(tagId => {
-					const tagged = tagMap.get(tagId) ?? [];
-					tagged.push(result);
-					tagMap.set(tagId, tagged);
-				});
-			}
-		});
-
-		return tagMap;
-	}
-
-	function addCustomTag() {
-		if (!newTagName.trim()) return;
-
-		const newTag: Tag = {
-			id: `custom-${Date.now()}`,
-			name: newTagName.trim(),
-			color: newTagColor,
-			isCustom: true
-		};
-
-		customTags = [...customTags, newTag];
-		newTagName = '';
-		newTagColor = '#3b82f6';
-		isAddingTag = false;
-	}
-
-	function toggleTag(resultId: string, tagId: string) {
-		results = results.map(r => {
-			if (r.id !== resultId) return r;
-
-			const hasTag = r.tags.includes(tagId);
-			return {
-				...r,
-				tags: hasTag ? r.tags.filter(t => t !== tagId) : [...r.tags, tagId]
-			};
-		});
-	}
-
-	function getTagById(tagId: string): Tag | undefined {
-		return allTags.find(t => t.id === tagId);
-	}
-
-	async function signOut() {
-		try {
-			await authClient.signOut();
-			goto('/auth/login');
-		} catch (err) {
-			console.error('Sign out error:', err);
+	// Bart De Wever demo data with Belgian news sources
+	let pages = $state<Page[]>([
+		{
+			id: 1,
+			title: 'Bart De Wever over de regeringsvorming',
+			site: 'De Standaard',
+			url: 'https://www.standaard.be/cnt/dmf20250110_97845632',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '2 days ago',
+			source: 'you',
+			tags: ['Press', 'Politics'],
+			hasScreenshot: true
+		},
+		{
+			id: 2,
+			title: 'Premier De Wever bezoekt Kyiv',
+			site: 'VRT NWS',
+			url: 'https://www.vrt.be/vrtnws/nl/2024/06/09/bart-de-wever-n-va/',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '4 days ago',
+			source: 'you',
+			tags: ['Press', 'International'],
+			hasScreenshot: true
+		},
+		{
+			id: 3,
+			title: 'N-VA campagnefoto gebruikt op sociale media',
+			site: 'The Brussels Times',
+			url: 'https://www.brusselstimes.com/belgium/1105315/belgium-bart-de-wever-is-officially-prime-minister',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '1 week ago',
+			source: 'found',
+			tags: ['Campaign'],
+			hasScreenshot: true
+		},
+		{
+			id: 4,
+			title: 'Interview: De toekomst van België',
+			site: 'RTBF',
+			url: 'https://www.rtbf.be/article/gouvernement-de-wever-voici-la-composition-du-futur-executif-federal-11499211',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '2 weeks ago',
+			source: 'you',
+			tags: ['Press', 'Interview'],
+			hasScreenshot: true
+		},
+		{
+			id: 5,
+			title: 'Burgemeester Antwerpen op persconferentie',
+			site: 'Politico Europe',
+			url: 'https://www.politico.eu/article/bart-de-wever-belgium-prime-minister/',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '3 weeks ago',
+			source: 'found',
+			tags: ['Press', 'Local'],
+			hasScreenshot: true
+		},
+		{
+			id: 6,
+			title: 'De Wever reageert op economische plannen',
+			site: 'The Hindu',
+			url: 'https://www.thehindu.com/news/international/belgian-pm-de-wever-says-trumps-tariffs-are-a-wake-up-call-for-europe/article69178496.ece',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '3 weeks ago',
+			source: 'you',
+			tags: ['Press', 'Economy'],
+			hasScreenshot: true
+		},
+		{
+			id: 7,
+			title: 'Bart De Wever in talkshow Vandaag',
+			site: 'European Commission',
+			url: 'https://audiovisual.ec.europa.eu/en/photo/P-076210~2F00-01',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '1 month ago',
+			source: 'you',
+			tags: ['TV', 'Interview'],
+			hasScreenshot: true
+		},
+		{
+			id: 8,
+			title: 'Foto op N-VA congres gebruikt door derden',
+			site: 'Reddit',
+			url: 'https://www.reddit.com/r/belgium/',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '1 month ago',
+			source: 'found',
+			tags: ['Campaign', 'Review'],
+			hasScreenshot: false
+		},
+		{
+			id: 9,
+			title: 'Profiel: Wie is Bart De Wever?',
+			site: 'Wikipedia',
+			url: 'https://nl.wikipedia.org/wiki/Bart_De_Wever',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '2 months ago',
+			source: 'you',
+			tags: ['Reference'],
+			hasScreenshot: true
+		},
+		{
+			id: 10,
+			title: 'De Wever op cover van Humo',
+			site: 'Wikimedia Commons',
+			url: 'https://commons.wikimedia.org/wiki/File:BartDeWever.jpg',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '2 months ago',
+			source: 'you',
+			tags: ['Press', 'Magazine'],
+			hasScreenshot: true
+		},
+		{
+			id: 11,
+			title: 'Oude campagnefoto opgedoken',
+			site: 'Facebook',
+			url: 'https://www.facebook.com/BartDeWever/',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg/440px-Visit_of_Bart_De_Wever%2C_Belgian_Prime_Minister%2C_to_the_European_Commission_%28cropped%29.jpg',
+			date: '3 months ago',
+			source: 'found',
+			tags: ['Social', 'Review'],
+			hasScreenshot: false
+		},
+		{
+			id: 12,
+			title: 'Officiële portretfoto op gemeentelijke website',
+			site: 'Stad Antwerpen',
+			url: 'https://www.antwerpen.be/',
+			imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/BartDeWever.jpg/440px-BartDeWever.jpg',
+			date: '6 months ago',
+			source: 'you',
+			tags: ['Official'],
+			hasScreenshot: true
 		}
-	}
+	]);
 
-	function toggleDropdown() {
-		isDropdownOpen = !isDropdownOpen;
-	}
+	const filteredPages = $derived(
+		sourceFilter === 'all' ? pages : pages.filter(p => p.source === sourceFilter)
+	);
 
-	function closeDropdown() {
-		isDropdownOpen = false;
-	}
-
-	function handleClickOutside(event: MouseEvent) {
-		if (dropdownButton && !dropdownButton.contains(event.target as Node)) {
-			closeDropdown();
-		}
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleClickOutside);
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
+	const sourceCounts = $derived({
+		all: pages.length,
+		you: pages.filter(p => p.source === 'you').length,
+		found: pages.filter(p => p.source === 'found').length
 	});
+
+	function getSourceClasses(source: Source): { bg: string; text: string; label: string } {
+		if (source === 'you') {
+			return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'You added' };
+		}
+		return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'We found' };
+	}
+
+	function openDetail(page: Page) {
+		selectedPage = page;
+	}
+
+	function closeDetail() {
+		selectedPage = null;
+	}
+
+	function removePage(id: number) {
+		pages = pages.filter(p => p.id !== id);
+		if (selectedPage?.id === id) {
+			selectedPage = null;
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>Your Results - Facetracker</title>
+	<title>Your Pages - Facetracker</title>
 </svelte:head>
 
-<style>
-	@keyframes fadeInScale {
-		from {
-			opacity: 0;
-			transform: scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
+<div class="p-6 lg:p-8">
+	<!-- Header -->
+	<div class="flex items-start justify-between mb-6">
+		<div>
+			<h1 class="text-3xl font-bold text-slate-900">Your Pages</h1>
+			<p class="mt-1 text-slate-600">Pages featuring Bart De Wever across the web</p>
+		</div>
+		<a
+			href="/app/add"
+			class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+		>
+			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+			</svg>
+			Add page
+		</a>
+	</div>
 
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes fadeOut {
-		from {
-			opacity: 1;
-		}
-		to {
-			opacity: 0;
-		}
-	}
-
-	.tab-content-enter {
-		animation: fadeInScale 0.3s ease-out forwards;
-	}
-
-	.tab-content-exit {
-		animation: fadeOut 0.15s ease-out forwards;
-	}
-
-	.animate-fade-in {
-		animation: fadeInScale 0.6s ease-out forwards;
-		opacity: 0;
-	}
-
-	.animate-fade-in-up {
-		animation: fadeInUp 0.4s ease-out forwards;
-		opacity: 0;
-	}
-
-	.delay-100 {
-		animation-delay: 0.1s;
-	}
-
-	.delay-200 {
-		animation-delay: 0.2s;
-	}
-
-	.gradient-text {
-		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	.result-card {
-		transition: all 0.3s ease;
-	}
-
-	.result-card:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 12px 24px -8px rgba(59, 130, 246, 0.3);
-	}
-
-	.image-card {
-		transition: all 0.3s ease;
-	}
-
-	.image-card:hover {
-		transform: scale(1.02);
-		box-shadow: 0 20px 40px -12px rgba(59, 130, 246, 0.4);
-	}
-
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			transform: translateY(-8px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	.dropdown-enter {
-		animation: slideDown 0.2s ease-out forwards;
-	}
-</style>
-
-<div class="min-h-screen bg-gradient-to-b from-blue-50 to-cyan-50">
-	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-		<!-- Header with Settings Cog -->
-		<div class="text-center mb-12 relative">
-			<a
-				href="/app/takedowns"
-				class="inline-block mb-4 group cursor-pointer"
-				title="Switch to Takedowns view"
+	<!-- Filters and View Toggle -->
+	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+		<!-- Source Filter -->
+		<div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+			<button
+				onclick={() => sourceFilter = 'all'}
+				class="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
+					{sourceFilter === 'all'
+						? 'bg-slate-900 text-white'
+						: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
 			>
-				<h1 class="text-5xl font-bold text-gray-900 transition-all duration-200 group-hover:scale-105">
-					Your <span class="gradient-text group-hover:opacity-80 transition-opacity">Results</span>
-				</h1>
-			</a>
-			<p class="text-lg text-gray-600">Manage and organize your found images</p>
+				All pages ({sourceCounts.all})
+			</button>
+			<button
+				onclick={() => sourceFilter = 'you'}
+				class="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
+					{sourceFilter === 'you'
+						? 'bg-emerald-600 text-white'
+						: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
+			>
+				You added ({sourceCounts.you})
+			</button>
+			<button
+				onclick={() => sourceFilter = 'found'}
+				class="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
+					{sourceFilter === 'found'
+						? 'bg-blue-600 text-white'
+						: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
+			>
+				We found ({sourceCounts.found})
+			</button>
+		</div>
 
-			<!-- Settings Cog -->
-			<div class="absolute top-0 right-0">
+		<!-- View Toggle -->
+		<div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
+			<button
+				onclick={() => viewMode = 'grid'}
+				class="p-2 rounded-lg transition-colors {viewMode === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-700'}"
+				aria-label="Grid view"
+			>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+				</svg>
+			</button>
+			<button
+				onclick={() => viewMode = 'list'}
+				class="p-2 rounded-lg transition-colors {viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-700'}"
+				aria-label="List view"
+			>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<!-- Grid View -->
+	{#if viewMode === 'grid'}
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+			{#each filteredPages as page}
+				{@const sourceStyle = getSourceClasses(page.source)}
 				<button
-					bind:this={dropdownButton}
-					onclick={toggleDropdown}
-					class="p-2 rounded-xl bg-white/80 hover:bg-white/90 shadow-sm border border-white/40 transition-all duration-200 hover:shadow-md"
-					aria-label="Settings menu"
+					onclick={() => openDetail(page)}
+					class="group rounded-2xl bg-white border border-slate-200 overflow-hidden hover:shadow-lg transition-all text-left"
 				>
-					<svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+					<div class="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 relative">
+						{#if page.imageUrl}
+							<img
+								src={page.imageUrl}
+								alt={page.title}
+								class="absolute inset-0 w-full h-full object-cover"
+							/>
+						{:else}
+							<div class="absolute inset-0 flex items-center justify-center">
+								<svg class="h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								</svg>
+							</div>
+						{/if}
+						<div class="absolute top-2 right-2">
+							<span class="px-2.5 py-1 rounded-full text-xs font-medium {sourceStyle.bg} {sourceStyle.text}">
+								{sourceStyle.label}
+							</span>
+						</div>
+						{#if !page.hasScreenshot}
+							<div class="absolute bottom-2 left-2">
+								<span class="px-2 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-700">
+									Pending screenshot
+								</span>
+							</div>
+						{/if}
+					</div>
+					<div class="p-4">
+						<p class="font-medium text-slate-900 truncate">{page.title}</p>
+						<p class="text-sm text-slate-500">{page.site} · {page.date}</p>
+						{#if page.tags.length > 0}
+							<div class="flex flex-wrap gap-1 mt-2">
+								{#each page.tags.slice(0, 3) as tag}
+									<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600">{tag}</span>
+								{/each}
+								{#if page.tags.length > 3}
+									<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-500">+{page.tags.length - 3}</span>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				</button>
+			{/each}
+		</div>
+	{:else}
+		<!-- List View -->
+		<div class="rounded-2xl bg-white border border-slate-200 overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="w-full">
+					<thead class="bg-slate-50 border-b border-slate-200">
+						<tr>
+							<th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Page</th>
+							<th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Site</th>
+							<th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Added</th>
+							<th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Source</th>
+							<th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tags</th>
+							<th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-slate-100">
+						{#each filteredPages as page}
+							{@const sourceStyle = getSourceClasses(page.source)}
+							<tr class="hover:bg-slate-50 transition-colors">
+								<td class="px-6 py-4">
+									<div class="flex items-center gap-3">
+										<div class="h-12 w-16 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+											{#if page.imageUrl}
+												<img
+													src={page.imageUrl}
+													alt={page.title}
+													class="w-full h-full object-cover"
+												/>
+											{:else}
+												<svg class="h-5 w-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+												</svg>
+											{/if}
+										</div>
+										<p class="font-medium text-slate-900 truncate max-w-xs">{page.title}</p>
+									</div>
+								</td>
+								<td class="px-6 py-4">
+									<p class="text-slate-600">{page.site}</p>
+								</td>
+								<td class="px-6 py-4 text-sm text-slate-500">{page.date}</td>
+								<td class="px-6 py-4">
+									<span class="px-2.5 py-1 rounded-full text-xs font-medium {sourceStyle.bg} {sourceStyle.text}">
+										{sourceStyle.label}
+									</span>
+								</td>
+								<td class="px-6 py-4">
+									{#if page.tags.length > 0}
+										<div class="flex flex-wrap gap-1">
+											{#each page.tags.slice(0, 2) as tag}
+												<span class="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600">{tag}</span>
+											{/each}
+											{#if page.tags.length > 2}
+												<span class="text-xs text-slate-400">+{page.tags.length - 2}</span>
+											{/if}
+										</div>
+									{:else}
+										<span class="text-sm text-slate-400">-</span>
+									{/if}
+								</td>
+								<td class="px-6 py-4 text-right">
+									<button
+										onclick={() => openDetail(page)}
+										class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+									>
+										View
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Empty State -->
+	{#if filteredPages.length === 0}
+		<div class="text-center py-12">
+			<svg class="h-12 w-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+			</svg>
+			<h3 class="text-lg font-medium text-slate-900 mb-1">No pages found</h3>
+			<p class="text-slate-500 mb-4">
+				{#if sourceFilter === 'you'}
+					You haven't added any pages yet.
+				{:else if sourceFilter === 'found'}
+					We haven't found any pages for you yet.
+				{:else}
+					Your collection is empty.
+				{/if}
+			</p>
+			<a
+				href="/app/add"
+				class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+			>
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+				</svg>
+				Add your first page
+			</a>
+		</div>
+	{/if}
+</div>
+
+<!-- Detail Panel (Slide-out) -->
+{#if selectedPage}
+	{@const sourceStyle = getSourceClasses(selectedPage.source)}
+	<div class="fixed inset-0 z-50">
+		<!-- Backdrop -->
+		<button
+			class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+			onclick={closeDetail}
+			aria-label="Close panel"
+		></button>
+
+		<!-- Panel -->
+		<div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl overflow-y-auto">
+			<!-- Header -->
+			<div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<h2 class="text-lg font-semibold text-slate-900">Page Details</h2>
+					<span class="px-2.5 py-1 rounded-full text-xs font-medium {sourceStyle.bg} {sourceStyle.text}">
+						{sourceStyle.label}
+					</span>
+				</div>
+				<button onclick={closeDetail} class="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+					<svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				</button>
+			</div>
 
-				{#if isDropdownOpen}
-					<div class="absolute right-0 mt-2 w-48 rounded-xl bg-white/95 backdrop-blur-lg shadow-lg border border-white/40 overflow-hidden dropdown-enter z-50">
-						<a
-							href="/app"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+			<div class="p-6 space-y-6">
+				<!-- Screenshot Preview -->
+				<div class="aspect-video rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative overflow-hidden">
+					{#if selectedPage.imageUrl}
+						<img
+							src={selectedPage.imageUrl}
+							alt={selectedPage.title}
+							class="absolute inset-0 w-full h-full object-cover"
+						/>
+					{:else if selectedPage.hasScreenshot}
+						<svg class="h-16 w-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+						</svg>
+					{:else}
+						<div class="text-center">
+							<svg class="h-12 w-12 text-amber-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
-							View Insights
-						</a>
-						<a
-							href="/app/takedowns"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-							</svg>
-							View Takedowns
-						</a>
-						<a
-							href="/app/settings"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-							</svg>
-							Settings
-						</a>
-						<button
-							onclick={() => {
-								closeDropdown();
-								signOut();
-							}}
-							class="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-							</svg>
-							Sign Out
+							<p class="text-sm text-slate-500">Screenshot pending</p>
+						</div>
+					{/if}
+				</div>
+
+				<!-- Page Title -->
+				<div>
+					<h3 class="text-xl font-semibold text-slate-900">{selectedPage.title}</h3>
+					<p class="text-slate-500 mt-1">{selectedPage.site} · {selectedPage.date}</p>
+				</div>
+
+				<!-- Source Information -->
+				<div class="rounded-xl bg-slate-50 p-4 space-y-3">
+					<div>
+						<p class="text-sm text-slate-500">URL</p>
+						<p class="font-medium text-slate-900 text-sm break-all">{selectedPage.url}</p>
+					</div>
+				</div>
+
+				<!-- Tags -->
+				<div class="space-y-3">
+					<h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Tags</h3>
+					<div class="flex flex-wrap gap-2">
+						{#each selectedPage.tags as tag}
+							<span class="px-3 py-1 rounded-full text-sm bg-slate-100 text-slate-700">{tag}</span>
+						{/each}
+						<button class="px-3 py-1 rounded-full text-sm border border-dashed border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-600 transition-colors">
+							+ Add Tag
 						</button>
 					</div>
-				{/if}
-			</div>
-		</div>
-
-		<!-- View Tabs -->
-		<div class="flex justify-center mb-12">
-			<div class="inline-flex items-center rounded-2xl bg-white/80 backdrop-blur-sm p-2 shadow-lg border border-white/40 gap-2">
-				<button
-					onclick={() => switchView('list')}
-					class="relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 {activeView === 'list' ? 'text-white' : 'text-gray-600 hover:text-gray-900'}"
-				>
-					{#if activeView === 'list'}
-						<div class="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-300"></div>
-					{/if}
-					<span class="relative z-10">List View</span>
-				</button>
-				<button
-					onclick={() => switchView('images')}
-					class="relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 {activeView === 'images' ? 'text-white' : 'text-gray-600 hover:text-gray-900'}"
-				>
-					{#if activeView === 'images'}
-						<div class="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-300"></div>
-					{/if}
-					<span class="relative z-10">Image Cards</span>
-				</button>
-				<button
-					onclick={() => switchView('tagged')}
-					class="relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 {activeView === 'tagged' ? 'text-white' : 'text-gray-600 hover:text-gray-900'}"
-				>
-					{#if activeView === 'tagged'}
-						<div class="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-300"></div>
-					{/if}
-					<span class="relative z-10">Tagged</span>
-				</button>
-
-				<!-- Divider -->
-				<div class="h-8 w-px bg-gray-300"></div>
-
-				<!-- Switch to Insights Icon -->
-				<a
-					href="/app"
-					class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-					title="Switch to Insights view"
-					aria-label="Switch to Insights view"
-				>
-					<svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-					</svg>
-				</a>
-			</div>
-		</div>
-
-		<!-- Content based on active view -->
-		<div class="relative">
-			<div class="{isTransitioning ? 'tab-content-exit' : 'tab-content-enter'}">
-			{#if activeView === 'list'}
-				<!-- Stats Summary -->
-				<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-					<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-						<div class="flex items-start justify-between">
-							<div>
-								<p class="text-sm font-medium text-gray-600 mb-2">Total</p>
-								<p class="text-4xl font-bold text-gray-900 mb-2">{results.length}</p>
-							</div>
-							<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-								<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-								</svg>
-							</div>
-						</div>
-					</div>
-					<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-						<div class="flex items-start justify-between">
-							<div>
-								<p class="text-sm font-medium text-gray-600 mb-2">New</p>
-								<p class="text-4xl font-bold text-gray-900 mb-2">{results.filter(r => r.status === 'new').length}</p>
-								<p class="text-sm text-blue-600">Awaiting action</p>
-							</div>
-							<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-								<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-								</svg>
-							</div>
-						</div>
-					</div>
-					<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-						<div class="flex items-start justify-between">
-							<div>
-								<p class="text-sm font-medium text-gray-600 mb-2">Pending</p>
-								<p class="text-4xl font-bold text-gray-900 mb-2">{results.filter(r => r.status === 'pending').length}</p>
-								<p class="text-sm text-yellow-600">In progress</p>
-							</div>
-							<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-								<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-								</svg>
-							</div>
-						</div>
-					</div>
-					<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-						<div class="flex items-start justify-between">
-							<div>
-								<p class="text-sm font-medium text-gray-600 mb-2">Removed</p>
-								<p class="text-4xl font-bold text-gray-900 mb-2">{results.filter(r => r.status === 'removed').length}</p>
-								<p class="text-sm text-green-600">Taken down</p>
-							</div>
-							<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-								<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-								</svg>
-							</div>
-						</div>
-					</div>
 				</div>
 
-				<!-- Filter Tabs for List View -->
-				<div class="flex gap-2 mb-6">
-					<button
-						onclick={() => selectedFilter = 'all'}
-						class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {selectedFilter === 'all' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-sm' : 'bg-white/50 text-gray-700 hover:bg-white/70'}"
+				<!-- Actions -->
+				<div class="space-y-3">
+					<h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Actions</h3>
+					<div class="grid grid-cols-2 gap-3">
+						<a
+							href={selectedPage.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
+						>
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+							</svg>
+							Visit Page
+						</a>
+						<a
+							href="/app/archive"
+							class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+						>
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+							</svg>
+							View Screenshot
+						</a>
+					</div>
+					<a
+						href="/app/takedowns"
+						class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-red-200 text-red-600 font-medium hover:bg-red-50 transition-colors"
 					>
-						All ({results.length})
-					</button>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+						</svg>
+						Request Takedown
+					</a>
+				</div>
+
+				<!-- Notes -->
+				<div class="space-y-3">
+					<h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Private Notes</h3>
+					<textarea
+						placeholder="Add private notes about this page..."
+						class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+						rows="3"
+					></textarea>
+				</div>
+
+				<!-- Danger Zone -->
+				<div class="pt-4 border-t border-slate-200">
 					<button
-						onclick={() => selectedFilter = 'new'}
-						class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {selectedFilter === 'new' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white/50 text-gray-700 hover:bg-white/70'}"
+						onclick={() => selectedPage && removePage(selectedPage.id)}
+						class="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-red-600 font-medium hover:bg-red-50 transition-colors"
 					>
-						New ({results.filter(r => r.status === 'new').length})
-					</button>
-					<button
-						onclick={() => selectedFilter = 'pending'}
-						class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {selectedFilter === 'pending' ? 'bg-yellow-600 text-white shadow-sm' : 'bg-white/50 text-gray-700 hover:bg-white/70'}"
-					>
-						Pending ({results.filter(r => r.status === 'pending').length})
-					</button>
-					<button
-						onclick={() => selectedFilter = 'removed'}
-						class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {selectedFilter === 'removed' ? 'bg-green-600 text-white shadow-sm' : 'bg-white/50 text-gray-700 hover:bg-white/70'}"
-					>
-						Removed ({results.filter(r => r.status === 'removed').length})
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+						</svg>
+						Remove from collection
 					</button>
 				</div>
-
-				<!-- List View -->
-				<div class="rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-					<h3 class="text-xl font-bold text-gray-900 mb-6">All Results</h3>
-					<div class="space-y-4">
-						{#each getFilteredResults() as result}
-							<div class="result-card p-4 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
-							<div class="flex items-start justify-between gap-4">
-								<div class="flex items-center gap-3 flex-1">
-									<div class="h-12 w-12 rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center flex-shrink-0">
-										<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-										</svg>
-									</div>
-									<div class="flex-1 min-w-0">
-										<h3 class="font-semibold text-gray-900 truncate">{result.site}</h3>
-										<a href={result.url} target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:text-blue-700 hover:underline truncate block">
-											{result.url}
-										</a>
-										<div class="flex flex-wrap gap-1 mt-2">
-											<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">{result.imageType}</span>
-											<span class="px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700">{result.websiteCategory}</span>
-											<span class="px-2 py-0.5 rounded-md text-xs font-medium {result.status === 'new' ? 'bg-blue-100 text-blue-700' : result.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}">
-												{result.status}
-											</span>
-											{#each result.tags as tagId}
-												{@const tag = getTagById(tagId)}
-												{#if tag}
-													<span class="px-2 py-0.5 rounded-md text-xs font-medium text-white" style="background-color: {tag.color}">
-														{tag.name}
-													</span>
-												{/if}
-											{/each}
-										</div>
-									</div>
-								</div>
-								<div class="flex flex-col items-end gap-2">
-									<p class="text-xs text-gray-500 whitespace-nowrap">{result.foundDate}</p>
-									<div class="flex gap-1">
-										<button
-											onclick={() => selectedResultForTag = selectedResultForTag === result.id ? null : result.id}
-											class="p-1.5 rounded-lg bg-white/80 hover:bg-white text-gray-700 transition-all border border-gray-200"
-											title="Manage tags"
-										>
-											<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-											</svg>
-										</button>
-										{#if result.status === 'new'}
-											<Button size="sm" class="h-8 text-xs bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700">
-												Takedown
-											</Button>
-										{/if}
-									</div>
-									{#if selectedResultForTag === result.id}
-										<div class="mt-2 p-2 rounded-lg bg-white border border-gray-200 shadow-lg max-w-xs">
-											<p class="text-xs font-semibold text-gray-700 mb-2">Apply tags:</p>
-											<div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
-												{#each allTags as tag}
-													<button
-														onclick={() => toggleTag(result.id, tag.id)}
-														class="px-2 py-1 rounded-md text-xs font-medium transition-all {result.tags.includes(tag.id) ? 'ring-2 ring-offset-1 ring-gray-400' : ''}"
-														style="background-color: {tag.color}; color: white;"
-													>
-														{tag.name}
-													</button>
-												{/each}
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{:else if activeView === 'images'}
-				<!-- Image Cards View with Grouping -->
-				<div class="rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-					<h3 class="text-xl font-bold text-gray-900 mb-6">Image Gallery</h3>
-					<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each getGroupedImages() as group}
-							<div class="image-card rounded-xl bg-gray-50/50 border border-gray-200/50 overflow-hidden">
-							<div class="relative aspect-square bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-								<svg class="h-16 w-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-								</svg>
-								{#if group.count > 1}
-									<div class="absolute top-2 right-2 px-2 py-1 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-lg">
-										{group.count} sites
-									</div>
-								{/if}
-								<div class="absolute bottom-2 left-2 right-2">
-									<span class="px-2 py-1 rounded-md text-xs font-medium {group.firstResult.status === 'new' ? 'bg-blue-600' : group.firstResult.status === 'pending' ? 'bg-yellow-600' : 'bg-green-600'} text-white inline-block">
-										{group.firstResult.status}
-									</span>
-								</div>
-							</div>
-							<div class="p-4">
-								<p class="font-semibold text-sm text-gray-900 mb-1">{group.firstResult.imageType}</p>
-								<p class="text-xs text-gray-600 truncate">{group.firstResult.site}</p>
-								{#if group.count > 1}
-									<p class="text-xs text-gray-500 mt-1">+{group.count - 1} more</p>
-								{/if}
-								<div class="mt-2 flex gap-1">
-									{#if group.firstResult.status === 'new'}
-										<Button size="sm" class="w-full text-xs bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700">
-											Request Takedown
-										</Button>
-									{/if}
-								</div>
-							</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{:else if activeView === 'tagged'}
-				<!-- Tagged View -->
-				<div class="space-y-8">
-					<!-- Add Custom Tag Button -->
-					<div class="rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-						{#if !isAddingTag}
-							<Button onclick={() => isAddingTag = true} size="sm" class="gap-2">
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-								</svg>
-								Create Custom Tag
-							</Button>
-						{:else}
-							<div class="flex gap-2 items-end">
-								<div class="flex-1">
-									<Label for="tagName" class="text-sm">Tag Name</Label>
-									<Input id="tagName" bind:value={newTagName} placeholder="Enter tag name" class="mt-1" />
-								</div>
-								<div>
-									<Label for="tagColor" class="text-sm">Color</Label>
-									<input id="tagColor" type="color" bind:value={newTagColor} class="mt-1 h-10 w-16 rounded-lg border-2 border-gray-200 cursor-pointer" />
-								</div>
-								<Button onclick={addCustomTag} size="sm">Add</Button>
-								<Button onclick={() => isAddingTag = false} variant="outline" size="sm">Cancel</Button>
-							</div>
-						{/if}
-					</div>
-
-					<!-- Results grouped by tags -->
-					{#each Array.from(getResultsByTag().entries()) as [tagId, taggedResults]}
-						{@const tag = tagId === 'untagged' ? { id: 'untagged', name: 'Untagged', color: '#9ca3af', isCustom: false } : getTagById(tagId)}
-						{#if tag}
-							<div class="rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-								<div class="flex items-center gap-2 mb-4">
-									<span class="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style="background-color: {tag.color}">
-										{tag.name}
-									</span>
-									<span class="text-sm text-gray-600">({taggedResults.length})</span>
-								</div>
-								<div class="space-y-4">
-									{#each taggedResults as result}
-										<div class="flex items-center justify-between p-4 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
-											<div class="flex items-center gap-4 flex-1 min-w-0">
-												<div class="h-12 w-12 rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center flex-shrink-0">
-													<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-													</svg>
-												</div>
-												<div class="flex-1 min-w-0">
-													<p class="font-semibold text-gray-900 truncate">{result.site}</p>
-													<p class="text-sm text-gray-500 truncate">{result.imageType}</p>
-												</div>
-											</div>
-											<span class="px-3 py-1 rounded-full text-sm font-medium {result.status === 'new' ? 'bg-blue-100 text-blue-700' : result.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}">
-												{result.status}
-											</span>
-										</div>
-									{/each}
-								</div>
-							</div>
-						{/if}
-					{/each}
-				</div>
-			{/if}
 			</div>
 		</div>
 	</div>
-</div>
+{/if}
