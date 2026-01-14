@@ -1,14 +1,15 @@
 services:
   db:
     image: pgvector/pgvector:pg16
-    restart: always
+    container_name: facetracker-db
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: facetracker
-    volumes:
-      - pgdata:/var/lib/postgresql
-volumes:
-  pgdata:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d facetracker"]
+      interval: 2s
+      timeout: 5s
+      retries: 10

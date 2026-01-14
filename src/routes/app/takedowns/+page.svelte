@@ -1,336 +1,372 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { authClient } from '$lib/auth-client';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	type TemplateType = 'dmca' | 'gdpr' | 'general';
+	type RequestStatus = 'draft' | 'sent' | 'pending' | 'resolved';
 
-	type TakedownStatus = 'draft' | 'submitted' | 'pending' | 'approved' | 'rejected' | 'completed';
-
-	interface Takedown {
-		id: string;
+	interface TakedownRequest {
+		id: number;
 		site: string;
 		url: string;
-		imageId: string;
-		status: TakedownStatus;
-		submittedDate: string;
-		lastUpdated: string;
-		notes: string;
+		type: TemplateType;
+		status: RequestStatus;
+		createdOn: string;
 	}
 
-	let isDropdownOpen = $state(false);
-	let dropdownButton: HTMLButtonElement | null = $state(null);
+	let activeTab = $state<'generator' | 'tracking'>('generator');
+	let selectedTemplate = $state<TemplateType>('dmca');
+	let formData = $state({
+		url: '',
+		yourName: '',
+		description: '',
+		email: ''
+	});
+	let generatedLetter = $state('');
+	let copied = $state(false);
 
-	const mockTakedowns: Takedown[] = [
-		{ id: '1', site: 'example-blog.com', url: 'https://example-blog.com/post/123', imageId: 'img1', status: 'submitted', submittedDate: '2 hours ago', lastUpdated: '2 hours ago', notes: 'Unauthorized use of profile photo' },
-		{ id: '2', site: 'photo-sharing.net', url: 'https://photo-sharing.net/gallery/456', imageId: 'img2', status: 'pending', submittedDate: '1 day ago', lastUpdated: '5 hours ago', notes: 'DMCA takedown request' },
-		{ id: '3', site: 'news-site.org', url: 'https://news-site.org/article/789', imageId: 'img1', status: 'completed', submittedDate: '3 days ago', lastUpdated: '1 day ago', notes: 'Successfully removed' },
-		{ id: '4', site: 'forum-discussion.com', url: 'https://forum-discussion.com/thread/321', imageId: 'img3', status: 'approved', submittedDate: '5 days ago', lastUpdated: '2 days ago', notes: 'Approved by moderator' },
-		{ id: '5', site: 'social-network.app', url: 'https://social-network.app/posts/333', imageId: 'img4', status: 'rejected', submittedDate: '1 week ago', lastUpdated: '3 days ago', notes: 'Need additional documentation' },
-		{ id: '6', site: 'business-directory.co', url: 'https://business-directory.co/profile/654', imageId: 'img1', status: 'draft', submittedDate: '2 weeks ago', lastUpdated: '2 weeks ago', notes: 'Draft request' }
+	// Mock data
+	const requests: TakedownRequest[] = [
+		{ id: 1, site: 'example-blog.com', url: 'https://example-blog.com/post/123', type: 'dmca', status: 'sent', createdOn: 'Jan 12, 2026' },
+		{ id: 2, site: 'photo-sharing.net', url: 'https://photo-sharing.net/gallery/456', type: 'gdpr', status: 'pending', createdOn: 'Jan 10, 2026' },
+		{ id: 3, site: 'news-site.org', url: 'https://news-site.org/article/789', type: 'general', status: 'resolved', createdOn: 'Jan 5, 2026' }
 	];
 
-	let takedowns = $state(mockTakedowns);
+	const templates = {
+		dmca: {
+			title: 'DMCA Takedown Notice',
+			description: 'For copyright infringement. Use when your copyrighted image is used without permission.',
+			icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
+		},
+		gdpr: {
+			title: 'GDPR Right to Erasure',
+			description: 'For EU privacy law requests. Use when you want your personal data removed.',
+			icon: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3'
+		},
+		general: {
+			title: 'General Removal Request',
+			description: 'A polite request for image removal. Good starting point for most cases.',
+			icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+		}
+	};
 
-	async function signOut() {
-		try {
-			await authClient.signOut();
-			goto('/auth/login');
-		} catch (err) {
-			console.error('Sign out error:', err);
+	function generateLetter() {
+		const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+		if (selectedTemplate === 'dmca') {
+			generatedLetter = `DMCA Takedown Notice
+
+Date: ${date}
+
+To Whom It May Concern,
+
+I am writing to notify you of an infringement of my copyrighted material on your website.
+
+Infringing Material URL: ${formData.url}
+
+I, ${formData.yourName}, am the copyright owner of the image(s) displayed at the above URL. I have not authorized the use of this material on your website.
+
+${formData.description}
+
+I have a good faith belief that the use of the copyrighted material described above is not authorized by the copyright owner, its agent, or the law.
+
+I declare under penalty of perjury that the above information is accurate and that I am the copyright owner or am authorized to act on behalf of the owner.
+
+Please remove or disable access to this material immediately.
+
+Sincerely,
+${formData.yourName}
+${formData.email}`;
+		} else if (selectedTemplate === 'gdpr') {
+			generatedLetter = `Subject Access Request - Right to Erasure (GDPR Article 17)
+
+Date: ${date}
+
+To the Data Controller,
+
+I am writing to request the erasure of my personal data that you currently hold and process.
+
+URL containing my personal data: ${formData.url}
+
+Requester: ${formData.yourName}
+Email: ${formData.email}
+
+${formData.description}
+
+Under Article 17 of the General Data Protection Regulation (GDPR), I have the right to request the erasure of personal data concerning me. I am exercising this right and request that you delete my personal data, specifically the image(s) at the URL above.
+
+Please confirm within one month that you have complied with this request, as required by Article 12 of the GDPR.
+
+If you do not comply with this request, I reserve the right to lodge a complaint with my local supervisory authority.
+
+Yours faithfully,
+${formData.yourName}`;
+		} else {
+			generatedLetter = `Image Removal Request
+
+Date: ${date}
+
+Dear Website Administrator,
+
+I am writing to kindly request the removal of an image of me from your website.
+
+Image Location: ${formData.url}
+
+${formData.description}
+
+I would appreciate if you could remove this image from your website at your earliest convenience. If you have any questions or need additional information to process this request, please contact me at ${formData.email}.
+
+Thank you for your understanding and cooperation.
+
+Best regards,
+${formData.yourName}
+${formData.email}`;
 		}
 	}
 
-	function toggleDropdown() {
-		isDropdownOpen = !isDropdownOpen;
+	function copyToClipboard() {
+		navigator.clipboard.writeText(generatedLetter);
+		copied = true;
+		setTimeout(() => copied = false, 2000);
 	}
 
-	function closeDropdown() {
-		isDropdownOpen = false;
-	}
-
-	function handleClickOutside(event: MouseEvent) {
-		if (dropdownButton && !dropdownButton.contains(event.target as Node)) {
-			closeDropdown();
+	function getStatusClasses(status: RequestStatus): string {
+		switch (status) {
+			case 'draft': return 'bg-slate-100 text-slate-600';
+			case 'sent': return 'bg-blue-100 text-blue-700';
+			case 'pending': return 'bg-amber-100 text-amber-700';
+			case 'resolved': return 'bg-emerald-100 text-emerald-700';
 		}
 	}
-
-	onMount(() => {
-		document.addEventListener('click', handleClickOutside);
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
-	});
 </script>
 
 <svelte:head>
-	<title>Your Takedowns - Facetracker</title>
+	<title>Takedowns - Facetracker</title>
 </svelte:head>
 
-<style>
-	@keyframes fadeInScale {
-		from {
-			opacity: 0;
-			transform: scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
+<div class="p-6 lg:p-8">
+	<!-- Header -->
+	<div class="mb-8">
+		<h1 class="text-3xl font-bold text-slate-900">Takedowns</h1>
+		<p class="mt-1 text-slate-600">Generate removal requests and track their status</p>
+	</div>
 
-	.animate-fade-in {
-		animation: fadeInScale 0.6s ease-out forwards;
-		opacity: 0;
-	}
+	<!-- Tabs -->
+	<div class="flex gap-2 mb-8">
+		<button
+			onclick={() => activeTab = 'generator'}
+			class="px-4 py-2 rounded-xl font-medium transition-all {activeTab === 'generator'
+				? 'bg-slate-900 text-white'
+				: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
+		>
+			Template Generator
+		</button>
+		<button
+			onclick={() => activeTab = 'tracking'}
+			class="px-4 py-2 rounded-xl font-medium transition-all {activeTab === 'tracking'
+				? 'bg-slate-900 text-white'
+				: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
+		>
+			Track Requests ({requests.length})
+		</button>
+	</div>
 
-	.gradient-text {
-		background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
+	{#if activeTab === 'generator'}
+		<div class="grid lg:grid-cols-2 gap-8">
+			<!-- Template Selection & Form -->
+			<div class="space-y-6">
+				<!-- Template Selection -->
+				<div class="rounded-2xl bg-white border border-slate-200 p-6">
+					<h2 class="text-lg font-semibold text-slate-900 mb-4">Select Template Type</h2>
+					<div class="space-y-3">
+						{#each Object.entries(templates) as [key, template]}
+							<button
+								onclick={() => { selectedTemplate = key as TemplateType; generatedLetter = ''; }}
+								class="w-full p-4 rounded-xl border-2 transition-all text-left {selectedTemplate === key
+									? 'border-blue-500 bg-blue-50'
+									: 'border-slate-200 hover:border-slate-300'}"
+							>
+								<div class="flex items-start gap-3">
+									<div class="h-10 w-10 rounded-lg bg-gradient-to-br {key === 'dmca' ? 'from-blue-500 to-cyan-500' : key === 'gdpr' ? 'from-purple-500 to-indigo-500' : 'from-slate-500 to-slate-600'} flex items-center justify-center flex-shrink-0">
+										<svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={template.icon} />
+										</svg>
+									</div>
+									<div>
+										<p class="font-medium text-slate-900">{template.title}</p>
+										<p class="text-sm text-slate-500">{template.description}</p>
+									</div>
+								</div>
+							</button>
+						{/each}
+					</div>
+				</div>
 
-	.stat-card {
-		transition: all 0.3s ease;
-	}
-
-	.stat-card:hover {
-		transform: translateY(-4px);
-		box-shadow: 0 12px 24px -8px rgba(239, 68, 68, 0.3);
-	}
-
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			transform: translateY(-8px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	.dropdown-enter {
-		animation: slideDown 0.2s ease-out forwards;
-	}
-</style>
-
-<div class="min-h-screen bg-gradient-to-b from-red-50 to-pink-50">
-	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-		<!-- Header with Settings Cog -->
-		<div class="text-center mb-12 relative">
-			<a
-				href="/app"
-				class="inline-block mb-4 group cursor-pointer"
-				title="Switch to Insights view"
-			>
-				<h1 class="text-5xl font-bold text-gray-900 transition-all duration-200 group-hover:scale-105">
-					Your <span class="gradient-text group-hover:opacity-80 transition-opacity">Takedowns</span>
-				</h1>
-			</a>
-			<p class="text-lg text-gray-600">Track and manage your takedown requests</p>
-
-			<!-- Settings Cog -->
-			<div class="absolute top-0 right-0">
-				<button
-					bind:this={dropdownButton}
-					onclick={toggleDropdown}
-					class="p-2 rounded-xl bg-white/80 hover:bg-white/90 shadow-sm border border-white/40 transition-all duration-200 hover:shadow-md"
-					aria-label="Settings menu"
-				>
-					<svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-					</svg>
-				</button>
-
-				{#if isDropdownOpen}
-					<div class="absolute right-0 mt-2 w-48 rounded-xl bg-white/95 backdrop-blur-lg shadow-lg border border-white/40 overflow-hidden dropdown-enter z-50">
-						<a
-							href="/app"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-							</svg>
-							View Insights
-						</a>
-						<a
-							href="/app/results"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-							</svg>
-							View Results
-						</a>
-						<a
-							href="/app/settings"
-							onclick={closeDropdown}
-							class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
-						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-							</svg>
-							Settings
-						</a>
+				<!-- Form -->
+				<div class="rounded-2xl bg-white border border-slate-200 p-6">
+					<h2 class="text-lg font-semibold text-slate-900 mb-4">Fill in Details</h2>
+					<div class="space-y-4">
+						<div>
+							<label for="url" class="block text-sm font-medium text-slate-700 mb-1">Page URL *</label>
+							<input
+								id="url"
+								type="url"
+								bind:value={formData.url}
+								placeholder="https://example.com/page-with-your-image"
+								class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							/>
+						</div>
+						<div>
+							<label for="name" class="block text-sm font-medium text-slate-700 mb-1">Your Full Name *</label>
+							<input
+								id="name"
+								type="text"
+								bind:value={formData.yourName}
+								placeholder="John Doe"
+								class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							/>
+						</div>
+						<div>
+							<label for="email" class="block text-sm font-medium text-slate-700 mb-1">Your Email *</label>
+							<input
+								id="email"
+								type="email"
+								bind:value={formData.email}
+								placeholder="john@example.com"
+								class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+							/>
+						</div>
+						<div>
+							<label for="description" class="block text-sm font-medium text-slate-700 mb-1">Additional Details</label>
+							<textarea
+								id="description"
+								bind:value={formData.description}
+								placeholder="Describe why you want this image removed..."
+								rows="3"
+								class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+							></textarea>
+						</div>
 						<button
-							onclick={() => {
-								closeDropdown();
-								signOut();
-							}}
-							class="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+							onclick={generateLetter}
+							disabled={!formData.url || !formData.yourName || !formData.email}
+							class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 						>
-							<svg class="h-4 w-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-							</svg>
-							Sign Out
+							Generate Letter
 						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Generated Letter -->
+			<div class="rounded-2xl bg-white border border-slate-200 p-6">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-lg font-semibold text-slate-900">Generated Letter</h2>
+					{#if generatedLetter}
+						<button
+							onclick={copyToClipboard}
+							class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
+						>
+							{#if copied}
+								<svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+								</svg>
+								Copied!
+							{:else}
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+								</svg>
+								Copy
+							{/if}
+						</button>
+					{/if}
+				</div>
+
+				{#if generatedLetter}
+					<div class="bg-slate-50 rounded-xl p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap max-h-[600px] overflow-y-auto">
+						{generatedLetter}
+					</div>
+					<div class="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100">
+						<p class="text-sm text-blue-800">
+							<strong>Next steps:</strong> Copy this letter and send it to the website administrator or hosting provider. You can usually find contact information in the website's footer, privacy policy, or WHOIS records.
+						</p>
+					</div>
+				{:else}
+					<div class="h-[400px] flex items-center justify-center bg-slate-50 rounded-xl">
+						<div class="text-center">
+							<svg class="h-12 w-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+							</svg>
+							<p class="text-slate-500">Fill in the form and click "Generate Letter"</p>
+						</div>
 					</div>
 				{/if}
 			</div>
 		</div>
-
-		<!-- Tab Navigation -->
-		<div class="flex justify-center mb-12">
-			<div class="inline-flex items-center gap-2 rounded-2xl bg-white/80 backdrop-blur-sm p-2 shadow-lg border border-white/40">
+	{:else}
+		<!-- Tracking Tab -->
+		<div class="rounded-2xl bg-white border border-slate-200 shadow-sm">
+			<div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+				<div>
+					<h2 class="text-lg font-semibold text-slate-900">Your Requests</h2>
+					<p class="text-sm text-slate-500">Track the status of your takedown requests</p>
+				</div>
 				<button
-					class="relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 text-white"
+					onclick={() => activeTab = 'generator'}
+					class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:from-blue-700 hover:to-purple-700 transition-all flex items-center gap-2"
 				>
-					<div class="absolute inset-0 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 transition-all duration-300"></div>
-					<span class="relative z-10">Overview</span>
-				</button>
-
-				<!-- Divider -->
-				<div class="h-8 w-px bg-gray-300"></div>
-
-				<!-- Switch to Insights Icon -->
-				<a
-					href="/app"
-					class="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-					title="Switch to Insights view"
-					aria-label="Switch to Insights view"
-				>
-					<svg class="h-5 w-5 text-gray-600 group-hover:text-gray-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-					</svg>
-				</a>
-			</div>
-		</div>
-
-		<!-- Stats Summary -->
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-			<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-				<div class="flex items-start justify-between">
-					<div>
-						<p class="text-sm font-medium text-gray-600 mb-2">Total Requests</p>
-						<p class="text-4xl font-bold text-gray-900 mb-2">{takedowns.length}</p>
-					</div>
-					<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
-						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-						</svg>
-					</div>
-				</div>
-			</div>
-			<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-				<div class="flex items-start justify-between">
-					<div>
-						<p class="text-sm font-medium text-gray-600 mb-2">Pending</p>
-						<p class="text-4xl font-bold text-gray-900 mb-2">{takedowns.filter(t => t.status === 'pending' || t.status === 'submitted').length}</p>
-						<p class="text-sm text-orange-600">Awaiting response</p>
-					</div>
-					<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-						</svg>
-					</div>
-				</div>
-			</div>
-			<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-				<div class="flex items-start justify-between">
-					<div>
-						<p class="text-sm font-medium text-gray-600 mb-2">Approved</p>
-						<p class="text-4xl font-bold text-gray-900 mb-2">{takedowns.filter(t => t.status === 'approved').length}</p>
-						<p class="text-sm text-blue-600">Ready to process</p>
-					</div>
-					<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
-						</svg>
-					</div>
-				</div>
-			</div>
-			<div class="stat-card rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-				<div class="flex items-start justify-between">
-					<div>
-						<p class="text-sm font-medium text-gray-600 mb-2">Completed</p>
-						<p class="text-4xl font-bold text-gray-900 mb-2">{takedowns.filter(t => t.status === 'completed').length}</p>
-						<p class="text-sm text-green-600">Successfully removed</p>
-					</div>
-					<div class="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-						</svg>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Takedown Requests List -->
-		<div class="rounded-2xl bg-white/80 backdrop-blur-sm p-8 border border-white/40 shadow-lg">
-			<div class="flex items-center justify-between mb-6">
-				<h3 class="text-xl font-bold text-gray-900">Takedown Requests</h3>
-				<Button class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 gap-2">
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 					</svg>
 					New Request
-				</Button>
+				</button>
 			</div>
-			<div class="space-y-4">
-				{#each takedowns as takedown}
-					<div class="p-4 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
-						<div class="flex items-start justify-between gap-4">
-							<div class="flex items-center gap-4 flex-1">
-								<div class="h-12 w-12 rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center flex-shrink-0">
-									<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-									</svg>
-								</div>
-								<div class="flex-1 min-w-0">
-									<p class="font-semibold text-gray-900">{takedown.site}</p>
-									<a href={takedown.url} target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:text-blue-700 hover:underline truncate block">
-										{takedown.url}
-									</a>
-									<p class="text-sm text-gray-600 mt-1">{takedown.notes}</p>
-									<div class="flex gap-2 mt-2 text-xs text-gray-500">
-										<span>Submitted: {takedown.submittedDate}</span>
-										<span>•</span>
-										<span>Updated: {takedown.lastUpdated}</span>
+
+			{#if requests.length === 0}
+				<div class="p-8 text-center">
+					<svg class="h-12 w-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+					</svg>
+					<p class="text-slate-500 mb-4">No takedown requests yet</p>
+					<button
+						onclick={() => activeTab = 'generator'}
+						class="text-blue-600 hover:text-blue-700 font-medium"
+					>
+						Create your first request
+					</button>
+				</div>
+			{:else}
+				<div class="divide-y divide-slate-100">
+					{#each requests as request}
+						<div class="p-4 hover:bg-slate-50 transition-colors">
+							<div class="flex items-center justify-between gap-4">
+								<div class="flex items-center gap-4 flex-1 min-w-0">
+									<div class="h-10 w-10 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center flex-shrink-0">
+										<svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={templates[request.type].icon} />
+										</svg>
+									</div>
+									<div class="flex-1 min-w-0">
+										<p class="font-medium text-slate-900">{request.site}</p>
+										<p class="text-sm text-slate-500 truncate">{request.url}</p>
+										<div class="flex items-center gap-2 mt-1">
+											<span class="text-xs text-slate-400">{templates[request.type].title}</span>
+											<span class="text-xs text-slate-300">|</span>
+											<span class="text-xs text-slate-400">{request.createdOn}</span>
+										</div>
 									</div>
 								</div>
-							</div>
-							<div class="flex flex-col items-end gap-2">
-								<span class="px-3 py-1 rounded-full text-sm font-medium {
-									takedown.status === 'draft' ? 'bg-gray-100 text-gray-700' :
-									takedown.status === 'submitted' ? 'bg-blue-100 text-blue-700' :
-									takedown.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-									takedown.status === 'approved' ? 'bg-purple-100 text-purple-700' :
-									takedown.status === 'rejected' ? 'bg-red-100 text-red-700' :
-									'bg-green-100 text-green-700'
-								}">
-									{takedown.status}
-								</span>
-								<Button variant="outline" size="sm">View Details</Button>
+								<div class="flex items-center gap-3">
+									<span class="px-2.5 py-1 rounded-full text-xs font-medium {getStatusClasses(request.status)}">
+										{request.status}
+									</span>
+									<button class="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+										<svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+										</svg>
+									</button>
+								</div>
 							</div>
 						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
-	</div>
+	{/if}
 </div>

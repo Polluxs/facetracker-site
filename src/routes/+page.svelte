@@ -1,523 +1,648 @@
 <script lang="ts">
 	import PublicNav from '$lib/components/PublicNav.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import { onMount } from 'svelte';
-
-	let mounted = false;
-
-	onMount(() => {
-		mounted = true;
-	});
 </script>
 
 <svelte:head>
-	<title>Facetracker - The Ethical Way to Track Yourself Online</title>
-	<meta name="description" content="Europe's compliant alternative for tracking where your images appear online. Ethical, privacy-first face tracking with legal takedown assistance." />
+	<title>Facetracker - Your Face, Your Rules</title>
+	<meta name="description" content="Watch your journey unfold. Every page that features you, every mention, every moment—collected and preserved. Your face, your rules." />
 </svelte:head>
-
-<style>
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    .animate-fade-in {
-        animation: fadeIn 0.8s ease-out forwards;
-    }
-
-    .delay-100 {
-        animation-delay: 0.1s;
-        opacity: 0;
-    }
-
-    .delay-200 {
-        animation-delay: 0.2s;
-        opacity: 0;
-    }
-
-    .delay-300 {
-        animation-delay: 0.3s;
-        opacity: 0;
-    }
-
-    .delay-400 {
-        animation-delay: 0.4s;
-        opacity: 0;
-    }
-
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .hover-lift {
-        transition: all 0.3s ease;
-    }
-
-    .hover-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px -12px rgba(59, 130, 246, 0.25);
-    }
-
-    .blob {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(70px);
-        opacity: 0.4;
-        animation: blob 7s infinite;
-    }
-
-    @keyframes blob {
-        0%, 100% {
-            transform: translate(0, 0) scale(1);
-        }
-        33% {
-            transform: translate(30px, -50px) scale(1.1);
-        }
-        66% {
-            transform: translate(-20px, 20px) scale(0.9);
-        }
-    }
-</style>
 
 <div class="min-h-screen bg-white">
 	<PublicNav />
 
 	<!-- Hero Section -->
-	<section class="relative overflow-hidden">
-		<!-- Animated background blobs -->
-		<div class="blob top-20 left-20 w-72 h-72 bg-blue-400" style="animation-delay: 0s;"></div>
-		<div class="blob top-40 right-20 w-96 h-96 bg-purple-400" style="animation-delay: 2s;"></div>
-		<div class="blob bottom-20 left-1/3 w-80 h-80 bg-cyan-400" style="animation-delay: 4s;"></div>
+	<section class="relative overflow-hidden border-b border-slate-100">
+		<div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-50"></div>
 
-		<div class="relative mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8">
-			<div class="text-center">
-				<h1 class="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl lg:text-8xl animate-fade-in-up" style="line-height: 1.1;">
-					Track <span class="gradient-text">Yourself</span> Online,<br />The Ethical Way
-				</h1>
-				<p class="mt-8 text-xl leading-relaxed text-gray-600 max-w-3xl mx-auto animate-fade-in-up delay-100">
-					Discover where your images appear across the web. Europe-based, privacy-first, and fully compliant. Take control of your digital presence.
-				</p>
-				<div class="mt-12 flex items-center justify-center gap-x-6 animate-fade-in-up delay-200">
-					<Button href="/auth/onboarding" size="lg" class="text-lg px-8 py-6 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30">
-						Start Verification
-					</Button>
-					<Button variant="outline" size="lg" href="#how-it-works" class="text-lg px-8 py-6 rounded-2xl border-2">
-						How It Works
-					</Button>
+		<div class="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+				<div>
+					<p class="text-blue-600 font-medium mb-4">Your face, your rules</p>
+					<h1 class="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-5xl leading-tight">
+						Own your <span class="text-blue-600">online</span> presence.
+					</h1>
+					<p class="mt-6 text-lg text-slate-600 leading-relaxed">
+						Build your own archive of everywhere you appear online. Add pages, organize your way, look back anytime.
+					</p>
+					<div class="mt-10 flex flex-col sm:flex-row gap-4">
+						<Button href="/auth/login" size="lg" class="text-base px-8 py-6 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg text-white">
+							Start Your Story
+						</Button>
+						<Button variant="outline" size="lg" href="#how-it-works" class="text-base px-8 py-6 rounded-xl border-slate-300 hover:bg-slate-50">
+							How It Works
+						</Button>
+					</div>
 				</div>
-				<p class="mt-6 text-sm text-gray-500 animate-fade-in-up delay-300">
-					🔒 Identity verification required for ethical use
-				</p>
-			</div>
 
-			<!-- Trust Indicators -->
-			<div class="mt-32 grid grid-cols-1 gap-8 sm:grid-cols-3 animate-fade-in delay-400">
-				<div class="text-center px-6 py-10 rounded-2xl bg-gradient-to-br from-blue-50/30 to-cyan-50/20 border border-blue-100/40 transition-all duration-300 hover:border-blue-200 hover:from-blue-50/50 hover:to-cyan-50/40 hover:shadow-md">
-					<div class="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-						</svg>
-					</div>
-					<h3 class="mt-5 text-lg font-semibold text-gray-900">Europe-Based</h3>
-					<p class="mt-2 text-sm text-gray-600 leading-relaxed">Fully compliant with European privacy regulations</p>
-				</div>
-				<div class="text-center px-6 py-10 rounded-2xl bg-gradient-to-br from-purple-50/30 to-pink-50/20 border border-purple-100/40 transition-all duration-300 hover:border-purple-200 hover:from-purple-50/50 hover:to-pink-50/40 hover:shadow-md">
-					<div class="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-						</svg>
-					</div>
-					<h3 class="mt-5 text-lg font-semibold text-gray-900">Verified Users Only</h3>
-					<p class="mt-2 text-sm text-gray-600 leading-relaxed">ID verification ensures ethical, consensual tracking</p>
-				</div>
-				<div class="text-center px-6 py-10 rounded-2xl bg-gradient-to-br from-cyan-50/30 to-blue-50/20 border border-cyan-100/40 transition-all duration-300 hover:border-cyan-200 hover:from-cyan-50/50 hover:to-blue-50/40 hover:shadow-md">
-					<div class="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-						</svg>
-					</div>
-					<h3 class="mt-5 text-lg font-semibold text-gray-900">Privacy-First</h3>
-					<p class="mt-2 text-sm text-gray-600 leading-relaxed">Only your chosen photos stored, no biometric data</p>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- How It Works Section -->
-	<section id="how-it-works" class="py-32 bg-gradient-to-b from-white to-blue-50/30">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="text-center">
-				<h2 class="text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-					How It <span class="gradient-text">Works</span>
-				</h2>
-				<p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-					Simple, secure, and transparent
-				</p>
-			</div>
-
-			<div class="mt-24 grid grid-cols-1 gap-16 md:grid-cols-3">
-				<div class="text-center relative">
-					<div class="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center text-3xl font-bold shadow-2xl shadow-blue-500/40">
-						1
-					</div>
-					<div class="mt-8 space-y-4">
-						<div class="mx-auto w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
-							<svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-							</svg>
+				<!-- Visual: Timeline/journey feeling -->
+				<div class="hidden lg:block relative">
+					<div class="relative bg-white rounded-2xl border border-slate-200 shadow-xl p-6">
+						<!-- Header -->
+						<div class="flex items-center justify-between mb-6">
+							<div>
+								<p class="text-sm text-slate-500">Your collection</p>
+								<p class="text-2xl font-semibold text-slate-900">47 pages</p>
+							</div>
+							<button class="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-1.5">
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+								</svg>
+								Add page
+							</button>
 						</div>
-						<h3 class="text-2xl font-semibold text-gray-900">Verify Your Identity</h3>
-						<p class="text-gray-600 leading-relaxed px-4">
-							Upload a valid ID to ensure ethical use and prevent misuse
-						</p>
-					</div>
-				</div>
-				<div class="text-center relative">
-					<div class="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center text-3xl font-bold shadow-2xl shadow-purple-500/40">
-						2
-					</div>
-					<div class="mt-8 space-y-4">
-						<div class="mx-auto w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-							<svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-							</svg>
+
+						<!-- Timeline entries with screenshot previews -->
+						<div class="space-y-3">
+							<div class="flex gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+								<div class="w-20 h-14 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+									<svg class="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+									</svg>
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-xs text-emerald-600 font-medium">You added</p>
+									<p class="text-sm font-medium text-slate-900 mt-0.5 truncate">Featured in De Standaard</p>
+									<p class="text-xs text-slate-500 mt-0.5">January 12, 2026</p>
+								</div>
+							</div>
+
+							<div class="flex gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+								<div class="w-20 h-14 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+									<svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+									</svg>
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-xs text-blue-600 font-medium">We found</p>
+									<p class="text-sm font-medium text-slate-900 mt-0.5 truncate">Campaign photo shared</p>
+									<p class="text-xs text-slate-500 mt-0.5">Appeared on 4 sites · Dec 2025</p>
+								</div>
+							</div>
+
+							<div class="flex gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100/50">
+								<div class="w-20 h-14 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+									<svg class="h-5 w-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+									</svg>
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-xs text-emerald-600 font-medium">You added</p>
+									<p class="text-sm font-medium text-slate-900 truncate">Interview · Het Nieuwsblad</p>
+									<p class="text-xs text-slate-500 mt-0.5">November 2025</p>
+								</div>
+							</div>
+
+							<div class="flex gap-3 p-3 rounded-xl bg-slate-50/50 opacity-60">
+								<div class="w-20 h-14 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+									<svg class="h-5 w-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+									</svg>
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-sm text-slate-400 truncate">Your first feature</p>
+									<p class="text-xs text-slate-400 mt-0.5">March 2023</p>
+								</div>
+							</div>
 						</div>
-						<h3 class="text-2xl font-semibold text-gray-900">Upload Your Photos</h3>
-						<p class="text-gray-600 leading-relaxed px-4">
-							Provide photos of yourself for facial comparison and tracking
-						</p>
-					</div>
-				</div>
-				<div class="text-center relative">
-					<div class="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white flex items-center justify-center text-3xl font-bold shadow-2xl shadow-cyan-500/40">
-						3
-					</div>
-					<div class="mt-8 space-y-4">
-						<div class="mx-auto w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
-							<svg class="h-6 w-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-							</svg>
+
+						<div class="mt-4 pt-4 border-t border-slate-100">
+							<button class="text-sm text-blue-600 font-medium hover:text-blue-700">View full collection →</button>
 						</div>
-						<h3 class="text-2xl font-semibold text-gray-900">Track & Take Action</h3>
-						<p class="text-gray-600 leading-relaxed px-4">
-							Monitor where your images appear and request legal takedowns
-						</p>
 					</div>
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<!-- Features Section -->
-	<section id="features" class="py-32 bg-white">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="text-center">
-				<h2 class="text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-					Why <span class="gradient-text">Facetracker</span>?
+	<!-- Trust Bar -->
+	<section class="border-b border-slate-100 bg-slate-50">
+		<div class="mx-auto max-w-6xl px-6 py-4">
+			<div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-slate-600">
+				<span class="group relative cursor-help border-b border-dashed border-slate-400">
+					GDPR Compliant
+					<div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10 text-center">
+						We follow EU privacy law. You control your data and can delete it anytime.
+					</div>
+				</span>
+				<span class="text-slate-300">·</span>
+				<span class="group relative cursor-help border-b border-dashed border-slate-400">
+					SOC 2 Infrastructure
+					<div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10 text-center">
+						SOC 2 is a security standard used by banks and healthcare. Your data is protected at the highest level.
+					</div>
+				</span>
+				<span class="text-slate-300">·</span>
+				<span class="group relative cursor-help border-b border-dashed border-slate-400">
+					European Hosted
+					<div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-44 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10 text-center">
+						Your data stays in Europe. No transfers to the US or elsewhere.
+					</div>
+				</span>
+			</div>
+		</div>
+	</section>
+
+	<!-- The Story Section -->
+	<section id="how-it-works" class="border-b border-slate-100">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="text-center max-w-2xl mx-auto mb-16">
+				<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl">
+					Your collection. Your way.
 				</h2>
-				<p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-					The ethical alternative to non-compliant services
+				<p class="mt-4 text-lg text-slate-600">
+					You're the curator—add what matters to you
 				</p>
 			</div>
 
-			<div class="mt-24 grid grid-cols-1 gap-8 md:grid-cols-2">
-				<div class="group p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-cyan-50 hover-lift border-2 border-blue-100/50">
-					<div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg mb-6">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-6">
+				<!-- You: Add pages - 4 columns -->
+				<div class="relative p-8 rounded-2xl bg-slate-900 text-white md:col-span-4">
+					<div class="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
 						</svg>
 					</div>
-					<h3 class="text-2xl font-semibold text-gray-900 mb-4">Ethical Self-Tracking</h3>
-					<p class="text-gray-600 leading-relaxed">
-						Track yourself, not others. Identity verification ensures consensual use only. No unauthorized tracking.
+					<p class="text-emerald-400 text-sm font-medium mb-2">You</p>
+					<h3 class="text-2xl font-semibold mb-3">Add pages yourself</h3>
+					<p class="text-slate-300 leading-relaxed text-lg">
+						Found an article about you? A campaign photo? A press feature? Add it in one click. You're building your own archive.
 					</p>
 				</div>
 
-				<div class="group p-10 rounded-3xl bg-gradient-to-br from-purple-50 to-pink-50 hover-lift border-2 border-purple-100/50">
-					<div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg mb-6">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+				<!-- We help: Find more - 2 columns -->
+				<div class="relative p-6 rounded-2xl bg-white border border-slate-200 md:col-span-2">
+					<div class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+						<svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
 						</svg>
 					</div>
-					<h3 class="text-2xl font-semibold text-gray-900 mb-4">Legal Takedown Assistance</h3>
-					<p class="text-gray-600 leading-relaxed">
-						Request legal removal of your images from websites. We help you exercise your rights.
+					<p class="text-blue-600 text-sm font-medium mb-2">We help</p>
+					<h3 class="text-xl font-semibold text-slate-900 mb-2">Find more</h3>
+					<p class="text-slate-600 leading-relaxed">
+						We look for pages you might have missed. You review and decide what to add.
 					</p>
 				</div>
 
-				<div class="group p-10 rounded-3xl bg-gradient-to-br from-cyan-50 to-blue-50 hover-lift border-2 border-cyan-100/50">
-					<div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-6">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+				<!-- Second row -->
+				<div class="relative p-6 rounded-2xl bg-white border border-slate-200 md:col-span-2">
+					<div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+						<svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
 						</svg>
 					</div>
-					<h3 class="text-2xl font-semibold text-gray-900 mb-4">Privacy-First Design</h3>
-					<p class="text-gray-600 leading-relaxed">
-						Only your chosen reference photos are stored. Real-time monitoring with full transparency about data usage.
+					<p class="text-slate-400 text-sm font-medium mb-2">Automatic</p>
+					<h3 class="text-xl font-semibold text-slate-900 mb-2">Screenshots saved</h3>
+					<p class="text-slate-600 leading-relaxed">
+						Every page gets captured exactly as it was. Your proof, preserved forever.
 					</p>
 				</div>
 
-				<div class="group p-10 rounded-3xl bg-gradient-to-br from-indigo-50 to-purple-50 hover-lift border-2 border-indigo-100/50">
-					<div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg mb-6">
-						<svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+				<div class="relative p-6 rounded-2xl bg-white border border-slate-200 md:col-span-2">
+					<div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+						<svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"></path>
 						</svg>
 					</div>
-					<h3 class="text-2xl font-semibold text-gray-900 mb-4">European Compliance</h3>
-					<p class="text-gray-600 leading-relaxed">
-						Based in Europe and fully compliant with GDPR and local privacy regulations. No shady jurisdictions.
+					<p class="text-slate-400 text-sm font-medium mb-2">Organize</p>
+					<h3 class="text-xl font-semibold text-slate-900 mb-2">Tag & filter</h3>
+					<p class="text-slate-600 leading-relaxed">
+						Label pages by campaign, client, or category. Find anything instantly.
 					</p>
+				</div>
+
+				<div class="relative p-6 rounded-2xl bg-white border border-slate-200 md:col-span-2">
+					<div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+						<svg class="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+						</svg>
+					</div>
+					<p class="text-slate-400 text-sm font-medium mb-2">Timeline</p>
+					<h3 class="text-xl font-semibold text-slate-900 mb-2">Look back anytime</h3>
+					<p class="text-slate-600 leading-relaxed">
+						See your journey unfold. From your first feature to your latest press.
+					</p>
+				</div>
+			</div>
+
+			<!-- Add your own callout -->
+			<div class="mt-12 p-6 rounded-2xl bg-blue-50 border border-blue-100 text-center">
+				<p class="text-blue-900 font-medium">Found yourself somewhere online?</p>
+				<p class="text-blue-700 text-sm mt-1">Add it to your collection in one click. No waiting for us to find it.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- What You Get Section -->
+	<section class="border-b border-slate-100 bg-slate-50">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+				<div>
+					<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl">
+						Look back anytime
+					</h2>
+					<p class="mt-4 text-lg text-slate-600 leading-relaxed">
+						That interview from 2021. The campaign that launched your career. The article you forgot about. Your story, always there when you want to revisit it.
+					</p>
+
+					<div class="mt-8 space-y-4">
+						<div class="flex gap-4">
+							<div class="flex-shrink-0 h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+								<svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+								</svg>
+							</div>
+							<div>
+								<h3 class="font-semibold text-slate-900">Watch your journey grow</h3>
+								<p class="mt-1 text-slate-600">From your first feature to your latest. See how far you've come.</p>
+							</div>
+						</div>
+
+						<div class="flex gap-4">
+							<div class="flex-shrink-0 h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+								<svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+								</svg>
+							</div>
+							<div>
+								<h3 class="font-semibold text-slate-900">See where photos spread</h3>
+								<p class="mt-1 text-slate-600">Curious where an image ended up? Find everywhere it's been shared.</p>
+							</div>
+						</div>
+
+						<div class="flex gap-4">
+							<div class="flex-shrink-0 h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+								<svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+								</svg>
+							</div>
+							<div>
+								<h3 class="font-semibold text-slate-900">See pages as they were</h3>
+								<p class="mt-1 text-slate-600">Every page you add is captured as a screenshot. Hover and see exactly how it looked.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-lg">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="h-10 w-10 rounded-full bg-slate-200"></div>
+						<div>
+							<p class="font-medium text-slate-900">Your Story</p>
+							<p class="text-sm text-slate-500">2023 – Present</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-3 gap-4 mb-6">
+						<div class="text-center p-4 rounded-xl bg-slate-50">
+							<p class="text-2xl font-semibold text-slate-900">47</p>
+							<p class="text-xs text-slate-500 mt-1">Total pages</p>
+						</div>
+						<div class="text-center p-4 rounded-xl bg-slate-50">
+							<p class="text-2xl font-semibold text-slate-900">12</p>
+							<p class="text-xs text-slate-500 mt-1">This year</p>
+						</div>
+						<div class="text-center p-4 rounded-xl bg-blue-50">
+							<p class="text-2xl font-semibold text-blue-600">+5</p>
+							<p class="text-xs text-blue-600 mt-1">This month</p>
+						</div>
+					</div>
+
+					<div class="space-y-3">
+						<p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Recent moments</p>
+						<div class="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+							<div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+								<span class="text-blue-600 text-xs font-medium">NEW</span>
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="text-sm font-medium text-slate-900 truncate">De Standaard feature</p>
+								<p class="text-xs text-slate-500">2 days ago</p>
+							</div>
+						</div>
+						<div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
+							<div class="w-12 h-12 rounded-lg bg-slate-200 flex items-center justify-center flex-shrink-0">
+								<svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+								</svg>
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="text-sm font-medium text-slate-900 truncate">LinkedIn campaign</p>
+								<p class="text-xs text-slate-500">Last week · 4 shares</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Protection Section (subtle, not the main pitch) -->
+	<section class="border-b border-slate-100">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="max-w-3xl mx-auto">
+				<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl text-center">
+					And when something doesn't belong?
+				</h2>
+				<p class="mt-4 text-lg text-slate-600 text-center">
+					Get it removed. We'll help you send the right letter.
+				</p>
+
+				<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="p-6 rounded-2xl bg-slate-900 text-white">
+						<p class="text-red-400 text-sm font-medium mb-2">Takedown assistance</p>
+						<h3 class="text-xl font-semibold mb-3">We handle it for you</h3>
+						<p class="text-slate-300 leading-relaxed">
+							Our trained legal team sends takedown requests on your behalf. DMCA notices, GDPR requests, removal letters—professionally handled.
+						</p>
+					</div>
+					<div class="p-6 rounded-2xl bg-white border border-slate-200">
+						<p class="text-slate-400 text-sm font-medium mb-3">Self-service</p>
+						<h3 class="text-xl font-semibold text-slate-900 mb-2">Or do it yourself</h3>
+						<p class="text-slate-600 leading-relaxed">
+							Generate your own takedown letters with our templates. Pre-filled with your evidence, ready to send.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Who It's For Section -->
+	<section class="border-b border-slate-100 bg-slate-50">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="text-center max-w-2xl mx-auto mb-16">
+				<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl">
+					For people with a story to track
+				</h2>
+			</div>
+
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+				<div class="bg-white rounded-2xl p-8 border border-slate-200">
+					<h3 class="text-lg font-semibold text-slate-900 mb-2">Models & creators</h3>
+					<p class="text-slate-600 leading-relaxed">
+						See where your photos end up. Track campaigns, press features, and how your images spread across the web.
+					</p>
+				</div>
+
+				<div class="bg-white rounded-2xl p-8 border border-slate-200">
+					<h3 class="text-lg font-semibold text-slate-900 mb-2">Public figures</h3>
+					<p class="text-slate-600 leading-relaxed">
+						Athletes, executives, personalities—watch your coverage grow and keep a record of your public presence.
+					</p>
+				</div>
+
+				<div class="bg-white rounded-2xl p-8 border border-slate-200">
+					<h3 class="text-lg font-semibold text-slate-900 mb-2">Agencies & managers</h3>
+					<p class="text-slate-600 leading-relaxed">
+						Track your clients' presence. Document coverage for portfolios, sponsors, and reporting.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Coming Soon Section -->
+	<section class="border-b border-slate-100">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="text-center max-w-2xl mx-auto mb-12">
+				<p class="text-sm font-medium text-blue-600 mb-2">Coming soon</p>
+				<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl">
+					More ways to understand your story
+				</h2>
+			</div>
+
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
+				<div class="bg-white rounded-xl p-6 border border-slate-200">
+					<h3 class="font-semibold text-slate-900 mb-2">Context & sentiment</h3>
+					<p class="text-sm text-slate-600">Understand how you're being portrayed. Positive, neutral, or something to watch.</p>
+				</div>
+
+				<div class="bg-white rounded-xl p-6 border border-slate-200">
+					<h3 class="font-semibold text-slate-900 mb-2">Popularity insights</h3>
+					<p class="text-sm text-slate-600">See which of your images spread the most and where they're being used.</p>
+				</div>
+
+				<div class="bg-white rounded-xl p-6 border border-slate-200">
+					<h3 class="font-semibold text-slate-900 mb-2">Agency reports</h3>
+					<p class="text-sm text-slate-600">Exportable reports for clients with coverage overview and growth metrics.</p>
+				</div>
+
+				<div class="bg-white rounded-xl p-6 border border-slate-200">
+					<h3 class="font-semibold text-slate-900 mb-2">Browser extension</h3>
+					<p class="text-sm text-slate-600">Add pages to your story while browsing. One click, saved forever.</p>
 				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- Pricing Section -->
-	<section id="pricing" class="py-32 bg-gradient-to-b from-white to-gray-50">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="text-center">
-				<h2 class="text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-					Simple, <span class="gradient-text">Transparent</span> Pricing
+	<section class="border-b border-slate-100 bg-slate-50">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="text-center max-w-2xl mx-auto mb-12">
+				<h2 class="text-3xl font-semibold text-slate-900 sm:text-4xl">
+					Start free, grow when you're ready
 				</h2>
-				<p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-					Start with a free month trial. No credit card required.
+				<p class="mt-4 text-lg text-slate-600">
+					Your story, your pace
 				</p>
 			</div>
 
-			<div class="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-6">
-				<!-- Free Trial Card -->
-				<div class="relative p-8 rounded-3xl bg-white border-2 border-gray-200 transition-all duration-300 hover:border-blue-300 hover:shadow-lg">
-					<div class="mb-8">
-						<h3 class="text-2xl font-bold text-gray-900">Free Trial</h3>
-						<p class="mt-2 text-gray-600">Try Standard for free</p>
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+				<!-- Free Tier -->
+				<div class="bg-white rounded-2xl border border-slate-200 p-6">
+					<div class="mb-5">
+						<h3 class="text-lg font-semibold text-slate-900">Free</h3>
+						<p class="text-slate-500 text-sm mt-1">Start building your story</p>
 					</div>
-					<div class="mb-8">
-						<div class="flex items-baseline">
-							<span class="text-5xl font-bold text-gray-900">€0</span>
-							<span class="ml-2 text-gray-600">/month</span>
-						</div>
-						<p class="mt-2 text-sm text-gray-500">First month free</p>
+					<div class="mb-5">
+						<span class="text-3xl font-semibold text-slate-900">€0</span>
+						<span class="text-slate-500">/month</span>
 					</div>
-					<ul class="space-y-4 mb-8">
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<ul class="space-y-2.5 mb-6 text-sm">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700"><strong>5 scans</strong> per month</span>
+							<span class="text-slate-600">Unlimited manual submissions</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700">Up to <strong>10k images</strong> validated</span>
+							<span class="text-slate-600">Organize with tags</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700">Real-time monitoring</span>
+							<span class="text-slate-600">Timeline view</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700">Takedown requests</span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">Advanced analytics</span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">No credit card required</span>
+							<span class="text-slate-600">Takedown letter templates</span>
 						</li>
 					</ul>
-					<Button href="/auth/onboarding" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+					<Button href="/auth/login" variant="outline" class="w-full rounded-xl py-4 border-slate-300 text-sm">
+						Get Started
+					</Button>
+				</div>
+
+				<!-- Pro Tier -->
+				<div class="bg-slate-900 rounded-2xl p-6 text-white relative">
+					<div class="absolute top-4 right-4">
+						<span class="px-2.5 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">Popular</span>
+					</div>
+					<div class="mb-5">
+						<h3 class="text-lg font-semibold">Pro</h3>
+						<p class="text-slate-400 text-sm mt-1">We find your photos</p>
+					</div>
+					<div class="mb-5">
+						<span class="text-3xl font-semibold">€19</span>
+						<span class="text-slate-400">/month</span>
+					</div>
+					<ul class="space-y-2.5 mb-6 text-sm">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+							</svg>
+							<span class="text-slate-300">Everything in Free</span>
+						</li>
+						<li class="flex items-start gap-2.5 group relative">
+							<svg class="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+							</svg>
+							<span class="text-slate-300 border-b border-dashed border-slate-500 cursor-help">Find duplicate images</span>
+							<div class="absolute left-0 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-white text-slate-700 text-xs rounded-lg shadow-lg z-10">
+								Find where the exact same image appears across different websites
+							</div>
+						</li>
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+							</svg>
+							<span class="text-slate-300">Auto screenshots</span>
+						</li>
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+							</svg>
+							<span class="text-slate-300">Wayback archiving</span>
+						</li>
+					</ul>
+					<Button href="/auth/login" class="w-full rounded-xl py-4 bg-white text-slate-900 hover:bg-slate-100 text-sm">
 						Start Free Trial
 					</Button>
 				</div>
 
-				<!-- Standard Plan Card -->
-				<div class="relative p-8 rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 shadow-xl scale-105 transform">
-					<div class="absolute -top-4 left-1/2 -translate-x-1/2">
-						<span class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span>
+				<!-- Agency Tier -->
+				<div class="bg-white rounded-2xl border-2 border-blue-200 p-6 relative">
+					<div class="mb-5">
+						<h3 class="text-lg font-semibold text-slate-900">Agency</h3>
+						<p class="text-slate-500 text-sm mt-1">Full presence monitoring</p>
 					</div>
-					<div class="mb-8">
-						<h3 class="text-2xl font-bold text-gray-900">Standard</h3>
-						<p class="mt-2 text-gray-600">Perfect for individuals</p>
+					<div class="mb-5">
+						<span class="text-3xl font-semibold text-slate-900">€59</span>
+						<span class="text-slate-500">/month</span>
 					</div>
-					<div class="mb-8">
-						<div class="flex items-baseline">
-							<span class="text-5xl font-bold text-gray-900">€9.99</span>
-							<span class="ml-2 text-gray-600">/month</span>
-						</div>
-						<p class="mt-2 text-sm text-gray-500">Billed monthly</p>
-					</div>
-					<ul class="space-y-4 mb-8">
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<ul class="space-y-2.5 mb-6 text-sm">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700"><strong>5 scans</strong> per month</span>
+							<span class="text-slate-600">Everything in Pro</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<li class="flex items-start gap-2.5 group relative">
+							<svg class="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700">Up to <strong>10k images</strong> validated</span>
+							<span class="text-slate-600 border-b border-dashed border-slate-400 cursor-help">Active presence scanning</span>
+							<div class="absolute left-0 bottom-full mb-2 hidden group-hover:block w-52 p-2 bg-slate-900 text-white text-xs rounded-lg shadow-lg z-10">
+								We actively search for your name and face across the web, not just duplicates of images you've added
+							</div>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
-							<span class="text-gray-700">Real-time monitoring</span>
+							<span class="text-slate-600">Priority support</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">Takedown requests</span>
+						<li class="flex items-start gap-2.5 pt-2 border-t border-slate-100 mt-2">
+							<span class="text-xs font-medium text-blue-600 uppercase tracking-wide">Coming soon</span>
 						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 							</svg>
-							<span class="text-gray-700">Advanced analytics</span>
+							<span class="text-slate-400">Sentiment analysis</span>
+						</li>
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+							</svg>
+							<span class="text-slate-400">Context analysis</span>
+						</li>
+						<li class="flex items-start gap-2.5">
+							<svg class="h-4 w-4 text-slate-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+							</svg>
+							<span class="text-slate-400">Agency reports</span>
 						</li>
 					</ul>
-					<Button href="/auth/onboarding" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
-						Get Started
-					</Button>
-				</div>
-
-				<!-- Professional Plan Card -->
-				<div class="relative p-8 rounded-3xl bg-white border-2 border-gray-200 transition-all duration-300 hover:border-purple-300 hover:shadow-lg">
-					<div class="mb-8">
-						<h3 class="text-2xl font-bold text-gray-900">Professional</h3>
-						<p class="mt-2 text-gray-600">For power users</p>
-					</div>
-					<div class="mb-8">
-						<div class="flex items-baseline">
-							<span class="text-5xl font-bold text-gray-900">€99.99</span>
-							<span class="ml-2 text-gray-600">/month</span>
-						</div>
-						<p class="mt-2 text-sm text-gray-500">Billed monthly</p>
-					</div>
-					<ul class="space-y-4 mb-8">
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700"><strong>Daily scans</strong></span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">Up to <strong>100k images</strong> validated</span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700"><strong>Legal takedown assistance</strong></span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">Priority support</span>
-						</li>
-						<li class="flex items-start">
-							<svg class="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-							</svg>
-							<span class="text-gray-700">Ywein's phone number (he'll help you)</span>
-						</li>
-					</ul>
-					<Button href="/auth/onboarding" variant="outline" class="w-full border-2">
-						Get Started
+					<Button href="/auth/login" class="w-full rounded-xl py-4 bg-slate-900 text-white hover:bg-slate-800 text-sm">
+						Start Free Trial
 					</Button>
 				</div>
 			</div>
 
-			<p class="mt-12 text-center text-sm text-gray-500">
+			<p class="text-center text-sm text-slate-500 mt-8">
 				All plans include GDPR compliance and European data hosting
 			</p>
 		</div>
 	</section>
 
 	<!-- CTA Section -->
-	<section class="relative overflow-hidden">
-		<!-- Gradient background -->
-		<div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-cyan-600"></div>
-		<div class="blob top-0 left-0 w-96 h-96 bg-blue-400" style="animation-delay: 1s;"></div>
-		<div class="blob bottom-0 right-0 w-80 h-80 bg-purple-400" style="animation-delay: 3s;"></div>
-
-		<div class="relative mx-auto max-w-4xl px-4 py-32 sm:px-6 lg:px-8">
-			<div class="text-center">
-				<h2 class="text-4xl font-bold text-white sm:text-5xl lg:text-6xl" style="line-height: 1.2;">
-					Take Control of Your<br />Digital Presence
+	<section class="bg-slate-900">
+		<div class="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+			<div class="text-center max-w-2xl mx-auto">
+				<p class="text-blue-400 font-medium mb-4">Your face, your rules</p>
+				<h2 class="text-3xl font-semibold text-white sm:text-4xl">
+					Ready to start your story?
 				</h2>
-				<p class="mt-8 text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
-					Join the ethical alternative to privacy-invasive tracking services
+				<p class="mt-4 text-lg text-slate-400">
+					You bring the moments. We'll help you keep them.
 				</p>
-				<div class="mt-12 flex justify-center gap-4">
-					<Button href="/auth/onboarding" size="lg" class="text-lg px-10 py-7 rounded-2xl bg-white text-blue-600 hover:bg-gray-50 shadow-2xl shadow-blue-900/30">
+				<div class="mt-10">
+					<Button href="/auth/login" size="lg" class="text-base px-8 py-6 rounded-xl bg-white text-slate-900 hover:bg-slate-100 shadow-lg">
 						Get Started
 					</Button>
 				</div>
-				<p class="mt-8 text-sm text-blue-200">
-					🇪🇺 Proudly based in Europe
+				<p class="mt-6 text-sm text-slate-500">
+					Free to start · No credit card required
 				</p>
 			</div>
 		</div>
 	</section>
 
 	<!-- Footer -->
-	<footer class="bg-gradient-to-b from-gray-900 to-black">
-		<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-			<div class="text-center space-y-8">
-				<div class="flex justify-center items-center">
-					<h3 class="text-2xl font-bold gradient-text">Facetracker</h3>
+	<footer class="border-t border-slate-200 bg-white">
+		<div class="mx-auto max-w-6xl px-6 py-12">
+			<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+				<div>
+					<p class="text-lg font-semibold text-slate-900">Facetracker</p>
+					<p class="mt-1 text-sm text-slate-500">Your face, your rules.</p>
 				</div>
-				<div class="flex flex-wrap justify-center gap-8 text-gray-400">
-					<a href="/privacy-policy" class="hover:text-white transition-colors text-base">Privacy Policy</a>
-					<a href="/terms-of-service" class="hover:text-white transition-colors text-base">Terms of Service</a>
-					<a href="/contact" class="hover:text-white transition-colors text-base">Contact Us</a>
+				<div class="flex flex-wrap gap-6 text-sm text-slate-600">
+					<a href="/privacy-policy" class="hover:text-slate-900 transition-colors">Privacy Policy</a>
+					<a href="/terms-of-service" class="hover:text-slate-900 transition-colors">Terms of Service</a>
+					<a href="/contact" class="hover:text-slate-900 transition-colors">Contact</a>
 				</div>
-				<div class="pt-8 border-t border-gray-800">
-					<p class="text-sm text-gray-500">
-						© 2025 Facetracker. Europe-based and privacy-first.
-					</p>
-				</div>
+			</div>
+			<div class="mt-8 pt-8 border-t border-slate-100">
+				<p class="text-sm text-slate-400">
+					© 2026 Facetracker. European company. All rights reserved.
+				</p>
 			</div>
 		</div>
 	</footer>

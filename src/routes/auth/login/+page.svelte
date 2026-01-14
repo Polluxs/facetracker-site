@@ -6,12 +6,12 @@
 	import { PUBLIC_ENVIRONMENT } from '$env/static/public';
 	import { onMount } from 'svelte';
 
-	let isLoading = false;
-	let email = '';
-	let error = '';
-	let success = '';
-	let devMagicLink: string | null = null;
-	let devMagicLinkEmail: string | null = null;
+	let isLoading = $state(false);
+	let email = $state('');
+	let error = $state('');
+	let success = $state('');
+	let devMagicLink = $state<string | null>(null);
+	let devMagicLinkEmail = $state<string | null>(null);
 
 	async function fetchDevMagicLink() {
 		if (PUBLIC_ENVIRONMENT !== 'development') return;
