@@ -1040,6 +1040,25 @@
 													Visit page
 												</a>
 												<div class="flex items-center gap-3">
+													<button
+														onclick={() => openTakedownModal(selectedImage)}
+														class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+													>
+														<svg
+															class="h-4 w-4"
+															fill="none"
+															stroke="currentColor"
+															viewBox="0 0 24 24"
+														>
+															<path
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																stroke-width="2"
+																d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+															/>
+														</svg>
+														Request takedown
+													</button>
 													{#if !selectedImage.hasScreenshot && !selectedImage.isOffline}
 														<button
 															class="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
@@ -1060,25 +1079,6 @@
 															Archive now
 														</button>
 													{/if}
-													<button
-														onclick={() => openTakedownModal(selectedImage)}
-														class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-													>
-														<svg
-															class="h-4 w-4"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-															/>
-														</svg>
-														Request takedown
-													</button>
 												</div>
 											</div>
 										</div>
