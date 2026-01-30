@@ -1,17 +1,10 @@
 <script lang="ts">
-	import Sidebar from '$lib/components/app/Sidebar.svelte';
-	import MobileNav from '$lib/components/app/MobileNav.svelte';
+	import Topbar from '$lib/components/app/Topbar.svelte';
 </script>
 
-<div class="min-h-screen bg-slate-50">
-	<!-- Desktop Sidebar -->
-	<Sidebar />
-
-	<!-- Main Content -->
-	<main class="lg:pl-64 pb-20 lg:pb-0">
+<div class="min-h-screen bg-white">
+	<Topbar />
+	<main>
 		<slot />
 	</main>
-
-	<!-- Mobile Bottom Navigation -->
-	<MobileNav />
 </div>
