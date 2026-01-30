@@ -448,7 +448,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-white">
-	<div class="mx-auto max-w-6xl px-6 py-8">
+	<div class="mx-auto max-w-6xl py-8">
 		<!-- Review Section: Dark accent block like homepage -->
 		{#if showInlineReview}
 			<section class="mb-10">
@@ -580,7 +580,7 @@
 		{/if}
 
 		<!-- Collection Section -->
-		<section>
+		<section class="px-6">
 			<!-- Header -->
 			<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
