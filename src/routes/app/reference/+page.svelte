@@ -42,7 +42,7 @@
 	<title>Reference Photos - Facetracker</title>
 </svelte:head>
 
-<div class="p-6 lg:p-8">
+<div class="max-w-6xl mx-auto px-6 py-8">
 	<!-- Header -->
 	<div class="mb-8">
 		<h1 class="text-3xl font-bold text-slate-900">Reference Photos</h1>
