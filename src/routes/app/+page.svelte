@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { fade, fly } from 'svelte/transition';
 	import {
 		showAddModal,
 		closeAddModal as closeAddModalStore,
@@ -43,6 +44,9 @@
 
 	// Selected image for detail panel
 	let selectedImage = $state<Image | null>(null);
+
+	// "All caught up" toast notification
+	let showCaughtUpToast = $state(false);
 
 	function selectImage(image: Image | null) {
 		selectedImage = image;
@@ -316,8 +320,9 @@
 	let showSearch = $state(false);
 
 	// Undo state
-	let undoItem = $state<{ image: Image; action: 'rejected' } | null>(null);
+	let undoItem = $state<{ image: Image; action: 'verified' | 'rejected' } | null>(null);
 	let undoTimeout: ReturnType<typeof setTimeout> | null = null;
+	let caughtUpTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Review modal state (for 4+ items)
 	let showReviewModal = $state(false);
@@ -353,6 +358,22 @@
 		if (image) {
 			pendingImages = pendingImages.filter((img) => img.id !== id);
 			verifiedImages = [{ ...image, status: 'verified' }, ...verifiedImages];
+
+			if (undoTimeout) clearTimeout(undoTimeout);
+			if (caughtUpTimeout) clearTimeout(caughtUpTimeout);
+			undoItem = { image, action: 'verified' };
+
+			// Show caught up toast after undo period if all images reviewed
+			const allReviewed = pendingImages.length === 0;
+			undoTimeout = setTimeout(() => {
+				undoItem = null;
+				if (allReviewed) {
+					showCaughtUpToast = true;
+					caughtUpTimeout = setTimeout(() => {
+						showCaughtUpToast = false;
+					}, 3000);
+				}
+			}, 5000);
 		}
 	}
 
@@ -362,18 +383,35 @@
 			pendingImages = pendingImages.filter((img) => img.id !== id);
 
 			if (undoTimeout) clearTimeout(undoTimeout);
+			if (caughtUpTimeout) clearTimeout(caughtUpTimeout);
 			undoItem = { image, action: 'rejected' };
+
+			// Show caught up toast after undo period if all images reviewed
+			const allReviewed = pendingImages.length === 0;
 			undoTimeout = setTimeout(() => {
 				undoItem = null;
+				if (allReviewed) {
+					showCaughtUpToast = true;
+					caughtUpTimeout = setTimeout(() => {
+						showCaughtUpToast = false;
+					}, 3000);
+				}
 			}, 5000);
 		}
 	}
 
-	function undoReject() {
+	function undoAction() {
 		if (undoItem) {
+			// Remove from verified if it was verified
+			if (undoItem.action === 'verified') {
+				verifiedImages = verifiedImages.filter((img) => img.id !== undoItem!.image.id);
+			}
+			// Add back to pending
 			pendingImages = [undoItem.image, ...pendingImages];
 			undoItem = null;
 			if (undoTimeout) clearTimeout(undoTimeout);
+			if (caughtUpTimeout) clearTimeout(caughtUpTimeout);
+			showCaughtUpToast = false;
 		}
 	}
 
@@ -548,32 +586,6 @@
 						>
 							Review all
 						</button>
-					</div>
-				</div>
-			</section>
-		{:else if pendingImages.length === 0 && verifiedImages.length > 0}
-			<section class="mb-10">
-				<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-					<div class="flex items-center gap-4">
-						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-							<svg
-								class="h-5 w-5 text-emerald-600"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M5 13l4 4L19 7"
-								/>
-							</svg>
-						</div>
-						<div>
-							<p class="font-medium text-slate-900">All caught up</p>
-							<p class="text-sm text-slate-500">Scanning for new images · Last checked 5 min ago</p>
-						</div>
 					</div>
 				</div>
 			</section>
@@ -1157,8 +1169,8 @@
 {#if undoItem}
 	<div class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
 		<div class="flex items-center gap-4 rounded-xl bg-slate-900 px-5 py-3 text-white shadow-lg">
-			<span class="text-sm">Marked as not you</span>
-			<button onclick={undoReject} class="text-sm font-medium text-blue-400 hover:text-blue-300">
+			<span class="text-sm">{undoItem.action === 'verified' ? 'Added to collection' : 'Marked as not you'}</span>
+			<button onclick={undoAction} class="text-sm font-medium text-blue-400 hover:text-blue-300">
 				Undo
 			</button>
 		</div>
@@ -1550,6 +1562,19 @@
 					</div>
 				</div>
 			{/if}
+		</div>
+	</div>
+{/if}
+
+<!-- All caught up toast -->
+{#if showCaughtUpToast}
+	<div
+		class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+		transition:fly={{ y: 20, duration: 200 }}
+	>
+		<div class="flex items-center gap-2 rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-lg">
+			<span>🎉</span>
+			<span>You're all caught up</span>
 		</div>
 	</div>
 {/if}
