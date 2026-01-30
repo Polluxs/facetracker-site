@@ -4,6 +4,7 @@
 	import { openAddModal } from '$lib/stores/addModal';
 
 	let showUserMenu = $state(false);
+	let menuContainer: HTMLDivElement;
 
 	async function signOut() {
 		try {
@@ -13,7 +14,15 @@
 			console.error('Sign out error:', err);
 		}
 	}
+
+	function handleWindowClick(event: MouseEvent) {
+		if (showUserMenu && menuContainer && !menuContainer.contains(event.target as Node)) {
+			showUserMenu = false;
+		}
+	}
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <header class="sticky top-0 z-40 pt-4 px-6">
 	<div class="max-w-6xl mx-auto">
@@ -43,7 +52,7 @@
 				</button>
 
 				<!-- Settings / User menu -->
-				<div class="relative">
+				<div class="relative" bind:this={menuContainer}>
 					<button
 						onclick={() => showUserMenu = !showUserMenu}
 						class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -56,15 +65,8 @@
 					</button>
 
 					{#if showUserMenu}
-						<!-- Backdrop -->
-						<button
-							class="fixed inset-0 z-10"
-							onclick={() => showUserMenu = false}
-							aria-label="Close menu"
-						></button>
-
 						<!-- Dropdown -->
-						<div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20">
+						<div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10">
 							<a
 								href="/app/settings"
 								class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
