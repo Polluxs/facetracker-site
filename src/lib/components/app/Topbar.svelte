@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
-
-	interface Props {
-		onAddClick?: () => void;
-	}
-
-	let { onAddClick }: Props = $props();
+	import { openAddModal } from '$lib/stores/addModal';
 
 	let showUserMenu = $state(false);
 
@@ -16,14 +11,6 @@
 			goto('/auth/login');
 		} catch (err) {
 			console.error('Sign out error:', err);
-		}
-	}
-
-	function handleAddClick() {
-		if (onAddClick) {
-			onAddClick();
-		} else {
-			goto('/app/add');
 		}
 	}
 </script>
@@ -46,7 +33,7 @@
 			<div class="flex items-center gap-2">
 				<!-- Add button -->
 				<button
-					onclick={handleAddClick}
+					onclick={openAddModal}
 					class="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-xl hover:bg-slate-100 transition-colors"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

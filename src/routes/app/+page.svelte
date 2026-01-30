@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { showAddModal, closeAddModal as closeAddModalStore, openAddModal } from '$lib/stores/addModal';
 
 	/*
 	 * Data provider notes for future implementation:
@@ -45,6 +46,26 @@
 
 	function closeDetail() {
 		selectedImage = null;
+	}
+
+	// Add page modal
+	let addUrl = $state('');
+	let addLoading = $state(false);
+	let addSuccess = $state(false);
+
+	function closeAddModal() {
+		closeAddModalStore();
+		addUrl = '';
+		addLoading = false;
+		addSuccess = false;
+	}
+
+	async function handleAddSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		addLoading = true;
+		await new Promise(resolve => setTimeout(resolve, 1500));
+		addSuccess = true;
+		addLoading = false;
 	}
 
 	// Demo data
@@ -741,39 +762,6 @@
 					{/each}
 				</div>
 
-<style>
-	.detail-panel {
-		animation: expandPanel 0.3s ease-out;
-	}
-
-	.detail-content {
-		animation: fadeIn 0.3s ease-out 0.15s both;
-	}
-
-	@keyframes expandPanel {
-		from {
-			opacity: 0;
-			max-height: 0;
-			padding-top: 0;
-			padding-bottom: 0;
-		}
-		to {
-			opacity: 1;
-			max-height: 800px;
-		}
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-</style>
 			{:else if verifiedImages.length === 0}
 				<!-- Empty state -->
 				<div class="text-center py-20">
@@ -787,15 +775,15 @@
 						Add a page where you appear, or upload reference photos so we can find images for you.
 					</p>
 					<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-						<a
-							href="/app/add"
+						<button
+							onclick={openAddModal}
 							class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
 						>
 							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 							</svg>
 							Add a page
-						</a>
+						</button>
 						<a
 							href="/app/reference"
 							class="inline-flex items-center gap-2 px-6 py-3 text-slate-700 font-medium border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors"
@@ -916,3 +904,150 @@
 	</div>
 {/if}
 
+<!-- Add Page Modal -->
+{#if $showAddModal}
+	<div class="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+		<!-- Backdrop -->
+		<button
+			class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm add-backdrop"
+			onclick={closeAddModal}
+			aria-label="Close"
+		></button>
+
+		<!-- Modal -->
+		<div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl add-modal">
+			<!-- Close button -->
+			<button
+				onclick={closeAddModal}
+				class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors z-10"
+				aria-label="Close"
+			>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+
+			<div class="p-6">
+				{#if addSuccess}
+					<!-- Success State -->
+					<div class="text-center py-4 add-success">
+						<div class="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+							<svg class="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+						</div>
+						<h2 class="text-xl font-semibold text-slate-900 mb-2">Page added!</h2>
+						<p class="text-slate-600 mb-6">It'll appear in your collection shortly.</p>
+						<div class="flex gap-3 justify-center">
+							<button
+								onclick={() => { addSuccess = false; addUrl = ''; }}
+								class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+							>
+								Add another
+							</button>
+							<button
+								onclick={closeAddModal}
+								class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+							>
+								Done
+							</button>
+						</div>
+					</div>
+				{:else}
+					<!-- Form -->
+					<div class="mb-5">
+						<h2 class="text-xl font-bold text-slate-900">Add a page</h2>
+						<p class="mt-1 text-sm text-slate-600">Found yourself somewhere online?</p>
+					</div>
+
+					<form onsubmit={handleAddSubmit} class="space-y-4">
+						<div>
+							<input
+								type="url"
+								bind:value={addUrl}
+								placeholder="Paste URL here..."
+								required
+								disabled={addLoading}
+								class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all disabled:bg-slate-50 disabled:text-slate-500 text-sm"
+							/>
+						</div>
+
+						<button
+							type="submit"
+							disabled={addLoading || !addUrl}
+							class="w-full px-5 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+						>
+							{#if addLoading}
+								<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+								Adding...
+							{:else}
+								Add to collection
+							{/if}
+						</button>
+					</form>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.detail-panel {
+		animation: expandPanel 0.3s ease-out;
+	}
+
+	.detail-content {
+		animation: fadeIn 0.3s ease-out 0.15s both;
+	}
+
+	@keyframes expandPanel {
+		from {
+			opacity: 0;
+			max-height: 0;
+			padding-top: 0;
+			padding-bottom: 0;
+		}
+		to {
+			opacity: 1;
+			max-height: 800px;
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.add-backdrop {
+		animation: fadeIn 0.15s ease-out;
+	}
+
+	.add-modal {
+		animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+		transform-origin: top center;
+	}
+
+	.add-success {
+		animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+
+	@keyframes popIn {
+		from {
+			opacity: 0;
+			transform: scale(0.8);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+</style>
