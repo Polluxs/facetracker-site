@@ -617,9 +617,9 @@
 												</button>
 											</div>
 
-											<!-- AI Summary -->
+											<!-- Summary -->
 											<div>
-												<p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">AI Summary</p>
+												<p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Summary</p>
 												<p class="text-sm text-slate-300 leading-relaxed">
 													{selectedImage.fullSummary || selectedImage.summary || 'No summary available for this page.'}
 												</p>
