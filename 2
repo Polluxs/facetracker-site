@@ -1476,20 +1476,25 @@
 								{/each}
 							</div>
 
-							<div class="mb-6">
-								<label for="takedown-details" class="mb-2 block text-sm font-medium text-slate-700">
-									Anything else we should know? <span class="font-normal text-slate-400"
-										>(optional)</span
+							{#if takedownReason}
+								<div class="mb-6">
+									<label
+										for="takedown-details"
+										class="mb-2 block text-sm font-medium text-slate-700"
 									>
-								</label>
-								<textarea
-									id="takedown-details"
-									bind:value={takedownDetails}
-									placeholder="Add any additional context that might help..."
-									rows="3"
-									class="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-								></textarea>
-							</div>
+										Anything else we should know? <span class="font-normal text-slate-400"
+											>(optional)</span
+										>
+									</label>
+									<textarea
+										id="takedown-details"
+										bind:value={takedownDetails}
+										placeholder="Add any additional context that might help..."
+										rows="3"
+										class="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+									></textarea>
+								</div>
+							{/if}
 
 							<!-- Submit -->
 							<div class="flex items-center gap-4">
@@ -1522,6 +1527,11 @@
 							</div>
 						</div>
 
+						<!-- Trust message -->
+						<p class="mt-4 text-center text-xs text-slate-400">
+							We handle the entire process for you - contacting the website, following up, and
+							keeping you updated.
+						</p>
 						<!-- Right: Image preview -->
 						<div class="lg:w-2/5">
 							<div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
@@ -1536,17 +1546,6 @@
 								<p class="truncate text-sm text-slate-500">{takedownImage.url}</p>
 							</div>
 						</div>
-					</div>
-
-					<!-- HR -->
-					<hr class="my-6 h-px border-0 bg-black/10" />
-
-					<div class="mx-auto sm:w-full lg:w-3/5">
-						<!-- trust message -->
-						<p class="mt-4 text-center text-xs text-slate-400">
-							we handle the entire process for you - contacting the website, following up, and
-							keeping you updated.
-						</p>
 					</div>
 				</div>
 			{/if}
